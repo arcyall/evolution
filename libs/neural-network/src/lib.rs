@@ -248,7 +248,8 @@ mod tests {
             let inputs: &[f32] = &[0.1, 0.2, 0.3];
 
             let actual = network.propagate(inputs.to_vec());
-            let expected = network.layers[1].propagate(network.layers[0].propagate(inputs.to_vec()));
+            let expected =
+                network.layers[1].propagate(network.layers[0].propagate(inputs.to_vec()));
 
             assert_relative_eq!(actual.as_slice(), expected.as_slice());
         }

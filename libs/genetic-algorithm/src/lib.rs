@@ -5,6 +5,7 @@ use std::ops::Index;
 
 pub struct GeneticAlgorithm<S> {
     selection_method: S,
+    crossover_method: Box<dyn CrossoverMethod>,
 }
 
 #[derive(Default)]
@@ -100,8 +101,11 @@ impl<S> GeneticAlgorithm<S>
 where
     S: SelectionMethod,
 {
-    pub fn new(selection_method: S) -> Self {
-        Self { selection_method }
+    pub fn new(selection_method: S, crossover_method: impl CrossoverMethod + 'static) -> Self {
+        Self {
+            selection_method,
+            crossover_method: Box::new(crossover_method),
+        }
     }
 
     pub fn evolve<I>(&self, rng: &mut dyn RngCore, population: &[I]) -> Vec<I>
@@ -112,8 +116,9 @@ where
 
         (0..population.len())
             .map(|_| {
-                let parent_a = self.selection_method.select(rng, population);
-                let parent_b = self.selection_method.select(rng, population);
+                let parent_a = self.selection_method.select(rng, population).chromosome();
+                let parent_b = self.selection_method.select(rng, population).chromosome();
+                let mut child = self.crossover_method.crossover(rng, parent_a, parent_b);
                 todo!()
             })
             .collect()
@@ -184,7 +189,6 @@ mod tests {
         assert_eq!(actual_histogram, expected_histogram);
     }
 
-    #[allow(clippy::float_cmp)]
     #[test]
     fn test_crossover() {
         let mut rng = ChaCha8Rng::from_seed(Default::default());
