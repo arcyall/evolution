@@ -8,3 +8,6 @@ edition = "2021"
 [dependencies]
 rand = "0.8.5"
 rand_chacha = "0.3.1"
+
+[dev-dependencies]
+approx = "0.5.1"

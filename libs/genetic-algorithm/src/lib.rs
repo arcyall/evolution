@@ -1,6 +1,6 @@
 #![feature(type_alias_impl_trait)]
 
-use rand::{seq::SliceRandom, RngCore};
+use rand::{seq::SliceRandom, Rng, RngCore};
 use std::ops::Index;
 
 pub struct GeneticAlgorithm<S> {
@@ -15,14 +15,45 @@ pub struct Chromosome {
     genes: Vec<f32>,
 }
 
+#[derive(Default)]
+pub struct UniformCrossover;
+
 pub trait Individual {
     fn fitness(&self) -> f32;
+
+    fn chromosome(&self) -> &Chromosome;
 }
 
 pub trait SelectionMethod {
     fn select<'a, T>(&self, rng: &mut dyn RngCore, population: &'a [T]) -> &'a T
     where
         T: Individual;
+}
+
+pub trait CrossoverMethod {
+    fn crossover(
+        &self,
+        rng: &mut dyn RngCore,
+        parent_a: &Chromosome,
+        parent_b: &Chromosome,
+    ) -> Chromosome;
+}
+
+impl CrossoverMethod for UniformCrossover {
+    fn crossover(
+        &self,
+        rng: &mut dyn RngCore,
+        parent_a: &Chromosome,
+        parent_b: &Chromosome,
+    ) -> Chromosome {
+        assert_eq!(parent_a.len(), parent_b.len());
+
+        parent_a
+            .iter()
+            .zip(parent_b.iter())
+            .map(|(&a, &b)| if rng.gen_bool(0.5) { a } else { b })
+            .collect()
+    }
 }
 
 #[allow(clippy::len_without_is_empty)]
@@ -122,6 +153,10 @@ mod tests {
         fn fitness(&self) -> f32 {
             self.fitness
         }
+
+        fn chromosome(&self) -> &Chromosome {
+            panic!("TestIndividual")
+        }
     }
 
     #[test]
@@ -147,5 +182,28 @@ mod tests {
         let expected_histogram = BTreeMap::from_iter(vec![(1, 102), (2, 198), (3, 301), (4, 399)]);
 
         assert_eq!(actual_histogram, expected_histogram);
+    }
+
+    #[allow(clippy::float_cmp)]
+    #[test]
+    fn test_crossover() {
+        let mut rng = ChaCha8Rng::from_seed(Default::default());
+        let parent_a: Chromosome = (1..=100).map(|x| x as f32).collect();
+        let parent_b: Chromosome = (1..=100).map(|x| -x as f32).collect();
+        let child = UniformCrossover::default().crossover(&mut rng, &parent_a, &parent_b);
+        let diff_a = child
+            .clone()
+            .into_iter()
+            .zip(parent_a)
+            .filter(|(c, p)| c != p)
+            .count();
+        let diff_b = child
+            .into_iter()
+            .zip(parent_b)
+            .filter(|(c, p)| c != p)
+            .count();
+
+        assert_eq!(diff_a, 49);
+        assert_eq!(diff_b, 51);
     }
 }
