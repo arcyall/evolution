@@ -7,6 +7,8 @@ pub trait Individual {
     fn fitness(&self) -> f32;
 
     fn chromosome(&self) -> &Chromosome;
+
+    fn create(chromosome: Chromosome) -> Self;
 }
 
 pub trait SelectionMethod {
@@ -157,8 +159,8 @@ where
                 let mut child = self.crossover_method.crossover(rng, parent_a, parent_b);
 
                 self.mutation_method.mutate(rng, &mut child);
-                
-                todo!()
+
+                I::create(child)
             })
             .collect()
     }
@@ -182,24 +184,41 @@ mod tests {
     use rand_chacha::ChaCha8Rng;
     use std::collections::BTreeMap;
 
-    #[derive(Clone, Debug)]
-    struct TestIndividual {
-        fitness: f32,
+    impl PartialEq for Chromosome {
+        fn eq(&self, other: &Self) -> bool {
+            approx::relative_eq!(self.genes.as_slice(), other.genes.as_slice())
+        }
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub enum TestIndividual {
+        WithChromosome { chromosome: Chromosome },
+        WithFitness { fitness: f32 },
     }
 
     impl TestIndividual {
         pub fn new(fitness: f32) -> Self {
-            Self { fitness }
+            Self::WithFitness { fitness }
         }
     }
 
     impl Individual for TestIndividual {
-        fn fitness(&self) -> f32 {
-            self.fitness
+        fn chromosome(&self) -> &Chromosome {
+            match self {
+                Self::WithChromosome { chromosome } => chromosome,
+                Self::WithFitness { .. } => panic!("unsupported for testindividual"),
+            }
         }
 
-        fn chromosome(&self) -> &Chromosome {
-            panic!("TestIndividual")
+        fn create(chromosome: Chromosome) -> Self {
+            Self::WithChromosome { chromosome }
+        }
+
+        fn fitness(&self) -> f32 {
+            match self {
+                TestIndividual::WithChromosome { chromosome } => chromosome.iter().sum(),
+                TestIndividual::WithFitness { fitness } => *fitness,
+            }
         }
     }
 
