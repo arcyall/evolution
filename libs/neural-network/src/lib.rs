@@ -1,3 +1,5 @@
+#![feature(array_windows)]
+
 use crate::layer::*;
 pub use crate::layertopology::*;
 
@@ -22,8 +24,8 @@ impl Network {
 
         Self {
             layers: layers
-                .windows(2)
-                .map(|layers| Layer::random(rng, layers[0].neurons, layers[1].neurons))
+                .array_windows::<2>()
+                .map(|[fst, snd]| Layer::random(rng, fst.neurons, snd.neurons))
                 .collect(),
         }
     }
@@ -35,10 +37,9 @@ mod test {
     use approx::assert_relative_eq;
     mod random {
         use super::*;
+        use crate::layertopology::LayerTopology;
         use rand::SeedableRng;
         use rand_chacha::ChaCha8Rng;
-
-        use crate::layertopology::LayerTopology;
 
         #[test]
         fn test() {
@@ -91,9 +92,8 @@ mod test {
     }
 
     mod propagate {
-        use crate::neuron::Neuron;
-
         use super::*;
+        use crate::neuron::Neuron;
 
         #[test]
         fn test() {
