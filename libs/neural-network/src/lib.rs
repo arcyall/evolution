@@ -35,6 +35,7 @@ impl Network {
 mod test {
     use super::*;
     use approx::assert_relative_eq;
+    
     mod random {
         use super::*;
         use crate::layertopology::LayerTopology;

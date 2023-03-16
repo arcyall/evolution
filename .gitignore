@@ -1,3 +1,6 @@
-/target
-/Cargo.lock
-/.vs
+target
+Cargo.lock
+.vs
+pkg
+node_modules
+dist
