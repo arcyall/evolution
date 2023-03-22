@@ -26,12 +26,25 @@ CanvasRenderingContext2D.prototype.drawTriangle = function(x, y, size, rot) {
   this.stroke();
 };
 
+CanvasRenderingContext2D.prototype.drawCircle = function(x, y, radius) {
+  this.beginPath();
+  this.arc(x, y, radius, 0, 2.0 * Math.PI);
+  this.fillStyle = 'rgb(0, 0, 0)';
+  this.fill();
+}
+
 function redraw() {
+  const world = simulation.world();
+
   context.clearRect(0, 0, width, height)
 
   simulation.step();
 
-  for (const animal of simulation.world().animals) {
+  for (const food of world.food) {
+    context.drawCircle(food.x * width, food.y * height, (0.01/ 2.0 * width))
+  }
+
+  for (const animal of world.animals) {
     context.drawTriangle(animal.x * width, animal.y * height, 0.02 * width, animal.rot);
   }
 

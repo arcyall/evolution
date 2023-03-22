@@ -34,12 +34,14 @@ impl Simulation {
 #[derive(Clone, Debug, Serialize)]
 pub struct World {
     pub animals: Vec<Animal>,
+    pub food: Vec<Food>,
 }
 
 impl From<&sim::World> for World {
     fn from(world: &sim::World) -> Self {
         Self {
             animals: world.animals().iter().map(Animal::from).collect(),
+            food: world.food().iter().map(Food::from).collect(),
         }
     }
 }
@@ -59,6 +61,22 @@ impl From<&sim::Animal> for Animal {
             y: animal.position().y,
             rot: animal.rot().angle(),
             speed: animal.speed()
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct Food {
+    pub x: f32,
+    pub y: f32,
+}
+
+
+impl From<&sim::Food> for Food {
+    fn from(food: &sim::Food) -> Self {
+        Self {
+            x: food.position().x,
+            y: food.position().y,
         }
     }
 }

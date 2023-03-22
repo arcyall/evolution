@@ -63,7 +63,7 @@ impl Animal {
         Self {
             position: rng.gen(),
             rot: rng.gen(),
-            speed: 0.002
+            speed: 0.002,
         }
     }
 
