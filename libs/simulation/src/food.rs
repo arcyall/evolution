@@ -1,5 +1,4 @@
-use nalgebra::Point2;
-use rand::{Rng, RngCore};
+use crate::*;
 
 pub struct Food {
     pub(crate) position: Point2<f32>,

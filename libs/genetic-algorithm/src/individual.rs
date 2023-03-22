@@ -7,7 +7,7 @@ pub trait Individual {
 }
 
 #[cfg(test)]
-#[derive(Clone, Debug, PartialEq)]
+#[derive(PartialEq)]
 pub enum TestIndividual {
     WithChromosome { chromosome: Chromosome },
     WithFitness { fitness: f32 },

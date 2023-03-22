@@ -1,5 +1,4 @@
-use crate::{Animal, Food};
-use rand::RngCore;
+use crate::*;
 
 pub struct World {
     pub(crate) animals: Vec<Animal>,

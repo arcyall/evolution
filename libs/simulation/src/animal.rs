@@ -1,5 +1,4 @@
-use nalgebra::{Point2, Rotation2};
-use rand::{Rng, RngCore};
+use crate::*;
 
 pub struct Animal {
     pub(crate) position: Point2<f32>,

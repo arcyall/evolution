@@ -31,7 +31,7 @@ impl Simulation {
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Serialize)]
 pub struct World {
     pub animals: Vec<Animal>,
     pub food: Vec<Food>,
@@ -46,7 +46,7 @@ impl From<&sim::World> for World {
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Serialize)]
 pub struct Animal {
     pub x: f32,
     pub y: f32,
@@ -65,7 +65,7 @@ impl From<&sim::Animal> for Animal {
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Serialize)]
 pub struct Food {
     pub x: f32,
     pub y: f32,

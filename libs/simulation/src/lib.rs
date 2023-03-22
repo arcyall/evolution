@@ -1,5 +1,5 @@
 pub use self::{animal::*, food::*, world::*};
-use nalgebra::{distance, wrap, Vector2};
+use nalgebra::{distance, wrap, Point2, Rotation2, Vector2};
 use rand::{Rng, RngCore};
 
 mod animal;
