@@ -1,8 +1,9 @@
-pub use self::{animal::*, food::*, world::*};
+pub use self::{animal::*, eye::*, food::*, world::*};
 use nalgebra::{distance, wrap, Point2, Rotation2, Vector2};
 use rand::{Rng, RngCore};
 
 mod animal;
+mod eye;
 mod food;
 mod world;
 
@@ -28,20 +29,20 @@ impl Simulation {
 
     fn process_movement(&mut self) {
         for animal in &mut self.world.animals {
-            animal.position += animal.rot * Vector2::new(0.0, animal.speed);
+            animal.pos += animal.rot * Vector2::new(0.0, animal.speed);
 
-            animal.position.x = wrap(animal.position.x, 0.0, 1.0);
-            animal.position.y = wrap(animal.position.y, 0.0, 1.0);
+            animal.pos.x = wrap(animal.pos.x, 0.0, 1.0);
+            animal.pos.y = wrap(animal.pos.y, 0.0, 1.0);
         }
     }
 
     fn process_collisions(&mut self, rng: &mut dyn RngCore) {
         for animal in &mut self.world.animals {
             for food in &mut self.world.food {
-                let dist = distance(&animal.position, &food.position);
+                let dist = distance(&animal.pos, &food.pos);
 
                 if dist <= 0.02 {
-                    food.position = rng.gen();
+                    food.pos = rng.gen();
                 }
             }
         }
