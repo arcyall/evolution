@@ -1,4 +1,4 @@
-use nalgebra::{Point2, Vector2};
+use nalgebra::{Point2, Vector2, Rotation2};
 use rand::{Rng, RngCore};
 
 pub struct Simulation {
@@ -12,7 +12,8 @@ pub struct World {
 
 pub struct Animal {
     position: Point2<f32>,
-    velocity: Vector2<f32>,
+    rot: Rotation2<f32>,
+    speed: f32,
 }
 
 pub struct Food {
@@ -35,7 +36,7 @@ impl World {
     pub fn random(rng: &mut dyn RngCore) -> Self {
         Self {
             animals: (0..40).map(|_| Animal::random(rng)).collect(),
-            food: (0..70).map(|_| Food::random(rng)).collect(),
+            food: (0..60).map(|_| Food::random(rng)).collect(),
         }
     }
 
@@ -52,7 +53,8 @@ impl Animal {
     pub fn random(rng: &mut dyn RngCore) -> Self {
         Self {
             position: rng.gen(),
-            velocity: rng.gen(),
+            rot: rng.gen(),
+            speed: rng.gen()
         }
     }
 
@@ -60,8 +62,12 @@ impl Animal {
         self.position
     }
 
-    pub fn velocity(&self) -> Vector2<f32> {
-        self.velocity
+    pub fn rot(&self) -> Rotation2<f32> {
+        self.rot
+    }
+
+    pub fn speed(&self) -> f32 {
+        self.speed
     }
 }
 
