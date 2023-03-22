@@ -165,7 +165,8 @@ mod tests {
             y: 0.5,
             rot,
             expected_vision,
-        }.run()
+        }
+        .run()
     }
 
     #[test_case(0.9, 0.5, "#           #")]
@@ -197,7 +198,8 @@ mod tests {
             x,
             y,
             expected_vision,
-        }.run()
+        }
+        .run()
     }
 
     #[test_case(0.25 * PI, " +         + ")]
@@ -226,7 +228,7 @@ mod tests {
             rot: 0.0,
             fov_angle,
             expected_vision,
-        }.run()
+        }
+        .run()
     }
 }
-
