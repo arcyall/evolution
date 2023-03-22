@@ -22,14 +22,16 @@ CanvasRenderingContext2D.prototype.drawTriangle = function(x, y, size, rot) {
               y + Math.cos(rot + 4.0 / 3.0 * Math.PI) * size);
   this.lineTo(x - Math.sin(rot) * size * 1.5, 
               y + Math.cos(rot) * size * 1.5);
-  this.fillStyle = 'rgb(0, 0, 0)';
+  this.fillStyle = '#0E8388';
+  this.strokeStyle = '#DDDDDD'
   this.stroke();
+  this.fill();
 };
 
 CanvasRenderingContext2D.prototype.drawCircle = function(x, y, radius) {
   this.beginPath();
   this.arc(x, y, radius, 0, 2.0 * Math.PI);
-  this.fillStyle = 'rgb(0, 0, 0)';
+  this.fillStyle = '#CBE4DE';
   this.fill();
 }
 

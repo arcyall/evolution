@@ -27,7 +27,7 @@ impl Simulation {
     }
 
     pub fn step(&mut self) {
-        self.sim.step();
+        self.sim.step(&mut self.rng);
     }
 }
 
@@ -60,7 +60,7 @@ impl From<&sim::Animal> for Animal {
             x: animal.position().x,
             y: animal.position().y,
             rot: animal.rot().angle(),
-            speed: animal.speed()
+            speed: animal.speed(),
         }
     }
 }
@@ -70,7 +70,6 @@ pub struct Food {
     pub x: f32,
     pub y: f32,
 }
-
 
 impl From<&sim::Food> for Food {
     fn from(food: &sim::Food) -> Self {
