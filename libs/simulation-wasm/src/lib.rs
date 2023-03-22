@@ -25,6 +25,10 @@ impl Simulation {
         let world = World::from(self.sim.world());
         serde_wasm_bindgen::to_value(&world).unwrap()
     }
+
+    pub fn step(&mut self) {
+        self.sim.step();
+    }
 }
 
 #[derive(Clone, Debug, Serialize)]

@@ -1,4 +1,4 @@
-use nalgebra::{Point2, Vector2, Rotation2};
+use nalgebra::{Point2, Vector2, Rotation2, wrap};
 use rand::{Rng, RngCore};
 
 pub struct Simulation {
@@ -30,6 +30,15 @@ impl Simulation {
     pub fn world(&self) -> &World {
         &self.world
     }
+
+    pub fn step(&mut self) {
+        for animal in &mut self.world.animals {
+            animal.position += animal.rot * Vector2::new(0.0, animal.speed);
+
+            animal.position.x = wrap(animal.position.x, 0.0, 1.0);
+            animal.position.y = wrap(animal.position.y, 0.0, 1.0);
+        }
+    }
 }
 
 impl World {
@@ -54,7 +63,7 @@ impl Animal {
         Self {
             position: rng.gen(),
             rot: rng.gen(),
-            speed: rng.gen()
+            speed: 0.002
         }
     }
 
