@@ -15,7 +15,7 @@ mod world;
 const GENERATION_LEN: usize = 2500;
 
 const SPEED_MIN: f32 = 0.001;
-const SPEED_MAX: f32 = 0.007;
+const SPEED_MAX: f32 = 0.004;
 const SPEED_ACCEL: f32 = 0.2;
 const ROT_ACCEL: f32 = FRAC_PI_2;
 

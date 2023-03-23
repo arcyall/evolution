@@ -51,7 +51,7 @@ function redraw() {
   }
 
   for (const animal of world.animals) {
-    context.drawTriangle(animal.x * width, animal.y * height, 0.02 * width, animal.rot);
+    context.drawTriangle(animal.x * width, animal.y * height, 0.01 * width, animal.rot);
   }
 
   requestAnimationFrame(redraw);
