@@ -35,16 +35,8 @@ mod test {
         let parent_a: Chromosome = (1..=100).map(|x| x as f32).collect();
         let parent_b: Chromosome = (1..=100).map(|x| -x as f32).collect();
         let child = UniformCrossover::default().crossover(&mut rng, &parent_a, &parent_b);
-        let diff_a = child
-            .iter()
-            .zip(parent_a)
-            .filter(|(c, p)| *c != p)
-            .count();
-        let diff_b = child
-            .iter()
-            .zip(parent_b)
-            .filter(|(c, p)| *c != p)
-            .count();
+        let diff_a = child.iter().zip(parent_a).filter(|(c, p)| *c != p).count();
+        let diff_b = child.iter().zip(parent_b).filter(|(c, p)| *c != p).count();
 
         assert_eq!(diff_a, 49);
         assert_eq!(diff_b, 51);

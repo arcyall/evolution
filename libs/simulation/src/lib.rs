@@ -42,7 +42,7 @@ impl Simulation {
         &self.world
     }
 
-    pub fn step(&mut self, rng: &mut dyn RngCore) -> bool {
+    pub fn step(&mut self, rng: &mut dyn RngCore) -> Option<ga::Statistics> {
         self.process_collisions(rng);
         self.process_brains();
         self.process_movement();
@@ -50,17 +50,16 @@ impl Simulation {
         self.age += 1;
 
         if self.age > GENERATION_LEN {
-            self.evolve(rng);
-            true
+            Some(self.evolve(rng))
         } else {
-            false
+            None
         }
     }
 
-    pub fn train(&mut self, rng: &mut dyn RngCore) {
+    pub fn train(&mut self, rng: &mut dyn RngCore) -> ga::Statistics {
         loop {
-            if self.step(rng) {
-                return;
+            if let Some(stats) = self.step(rng) {
+                return stats;
             }
         }
     }
@@ -102,7 +101,7 @@ impl Simulation {
         }
     }
 
-    fn evolve(&mut self, rng: &mut dyn RngCore) {
+    fn evolve(&mut self, rng: &mut dyn RngCore) -> ga::Statistics {
         self.age = 0;
 
         let current_pop: Vec<AnimalIndividual> = self
@@ -112,7 +111,7 @@ impl Simulation {
             .map(AnimalIndividual::from_animal)
             .collect();
 
-        let evolved_pop = self.ga.evolve(rng, &current_pop);
+        let (evolved_pop, stats) = self.ga.evolve(rng, &current_pop);
 
         self.world.animals = evolved_pop
             .into_iter()
@@ -122,5 +121,7 @@ impl Simulation {
         for food in &mut self.world.food {
             food.pos = rng.gen();
         }
+
+        stats
     }
 }
