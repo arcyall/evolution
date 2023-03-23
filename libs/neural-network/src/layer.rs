@@ -6,6 +6,10 @@ pub(crate) struct Layer {
 }
 
 impl Layer {
+    pub(crate) fn new(neurons: Vec<Neuron>) -> Self {
+        Self { neurons }
+    }
+
     pub(crate) fn propagate(&self, inputs: Vec<f32>) -> Vec<f32> {
         self.neurons
             .iter()
@@ -21,6 +25,18 @@ impl Layer {
         Self {
             neurons: (0..output_neurons)
                 .map(|_| Neuron::random(rng, input_neurons))
+                .collect(),
+        }
+    }
+
+    pub fn from_weights(
+        input_neurons: usize,
+        output_neurons: usize,
+        weights: &mut dyn Iterator<Item = f32>,
+    ) -> Self {
+        Self {
+            neurons: (0..output_neurons)
+                .map(|_| Neuron::from_weights(input_neurons, weights))
                 .collect(),
         }
     }

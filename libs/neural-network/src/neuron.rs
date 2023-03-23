@@ -7,6 +7,10 @@ pub(crate) struct Neuron {
 }
 
 impl Neuron {
+    pub(crate) fn new(bias: f32, weights: Vec<f32>) -> Self {
+        Self { bias, weights }
+    }
+
     pub(crate) fn propagate(&self, inputs: &[f32]) -> f32 {
         assert_eq!(inputs.len(), self.weights.len());
 
@@ -26,6 +30,15 @@ impl Neuron {
                 .map(|_| rng.gen_range(-1.0..=1.0))
                 .collect(),
         }
+    }
+
+    pub fn from_weights(output_size: usize, weights: &mut dyn Iterator<Item = f32>) -> Self {
+        let bias = weights.next().expect("insufficient weights");
+        let weights = (0..output_size)
+            .map(|_| weights.next().expect("insufficient weights"))
+            .collect();
+
+        Self { bias, weights }
     }
 }
 
