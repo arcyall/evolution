@@ -7,6 +7,7 @@ pub(crate) struct Neuron {
 }
 
 impl Neuron {
+    #[cfg(test)]
     pub(crate) fn new(bias: f32, weights: Vec<f32>) -> Self {
         Self { bias, weights }
     }

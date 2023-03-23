@@ -14,6 +14,7 @@ pub struct Network {
 }
 
 impl Network {
+    #[cfg(test)]
     pub(crate) fn new(layers: Vec<Layer>) -> Self {
         Self { layers }
     }

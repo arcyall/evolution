@@ -6,6 +6,7 @@ pub(crate) struct Layer {
 }
 
 impl Layer {
+    #[cfg(test)]
     pub(crate) fn new(neurons: Vec<Neuron>) -> Self {
         Self { neurons }
     }
