@@ -1,5 +1,3 @@
-use ga::Chromosome;
-
 use crate::*;
 
 pub struct Brain {

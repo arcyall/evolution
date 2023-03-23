@@ -30,10 +30,6 @@ impl AnimalIndividual {
         }
     }
 
-    pub fn to_animal(self, rng: &mut dyn RngCore) -> Animal {
-        todo!()
-    }
-
     pub fn into_animal(self, rng: &mut dyn RngCore) -> Animal {
         Animal::from_chromosome(self.chromosome, rng)
     }
