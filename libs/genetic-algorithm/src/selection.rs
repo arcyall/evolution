@@ -1,8 +1,9 @@
-pub use self::{roulette::*, rank::*,};
+pub use self::{rank::*, roulette::*, tournament::*};
 use crate::*;
 
-mod roulette;
 mod rank;
+mod roulette;
+mod tournament;
 
 pub trait SelectionMethod {
     fn select<'a, T>(&self, rng: &mut dyn RngCore, population: &'a [T]) -> &'a T
