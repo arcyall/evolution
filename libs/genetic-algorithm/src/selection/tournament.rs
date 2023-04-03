@@ -9,13 +9,13 @@ impl SelectionMethod for TournamentSelection {
     where
         T: Individual,
     {
-        let pop_len = population.len();
-        let tournament_size = rng.gen_range(0..pop_len);
-        let mut selected = &population[rng.gen_range(0..pop_len)];
+        let n = population.len();
+        let tournament_size = rng.gen_range(0..n);
+        let mut selected = &population[rng.gen_range(0..n)];
         let mut best = 0.0;
 
         for _ in 0..tournament_size {
-            let p = &population[rng.gen_range(0..pop_len)];
+            let p = &population[rng.gen_range(0..n)];
 
             if p.fitness() >= best {
                 best = p.fitness();
