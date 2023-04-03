@@ -2,3 +2,4 @@
 members = [
     "libs/*",
 ]
+resolver = "2"
