@@ -1,9 +1,9 @@
 pub use self::{animal::*, animal_individual::*, brain::*, eye::*, food::*, world::*};
 use lib_genetic_algorithm as ga;
 use lib_neural_network as nn;
-use nalgebra::{distance, wrap, Point2, Rotation2, Vector2};
+use nalgebra::{distance, wrap, Point2, Rotation2, Vector2, DVector};
 use rand::{Rng, RngCore};
-use std::f32::consts::FRAC_PI_2;
+use std::f64::consts::FRAC_PI_2;
 
 mod animal;
 mod animal_individual;
@@ -14,10 +14,10 @@ mod world;
 
 const GENERATION_LEN: usize = 2500;
 
-const SPEED_MIN: f32 = 0.001;
-const SPEED_MAX: f32 = 0.004;
-const SPEED_ACCEL: f32 = 0.2;
-const ROT_ACCEL: f32 = FRAC_PI_2;
+const SPEED_MIN: f64 = 0.001;
+const SPEED_MAX: f64 = 0.004;
+const SPEED_ACCEL: f64 = 0.2;
+const ROT_ACCEL: f64 = FRAC_PI_2;
 
 pub struct Simulation {
     world: World,

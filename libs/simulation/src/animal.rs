@@ -1,9 +1,9 @@
 use crate::*;
 
 pub struct Animal {
-    pub(crate) pos: Point2<f32>,
-    pub(crate) rot: Rotation2<f32>,
-    pub(crate) speed: f32,
+    pub(crate) pos: Point2<f64>,
+    pub(crate) rot: Rotation2<f64>,
+    pub(crate) speed: f64,
     pub(crate) eye: Eye,
     pub(crate) brain: Brain,
     pub(crate) collisions: usize,
@@ -24,15 +24,15 @@ impl Animal {
         }
     }
 
-    pub fn position(&self) -> Point2<f32> {
+    pub fn position(&self) -> Point2<f64> {
         self.pos
     }
 
-    pub fn rot(&self) -> Rotation2<f32> {
+    pub fn rot(&self) -> Rotation2<f64> {
         self.rot
     }
 
-    pub fn speed(&self) -> f32 {
+    pub fn speed(&self) -> f64 {
         self.speed
     }
 

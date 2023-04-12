@@ -1,7 +1,7 @@
 use crate::*;
 
 pub struct Food {
-    pub(crate) pos: Point2<f32>,
+    pub(crate) pos: Point2<f64>,
 }
 
 impl Food {
@@ -9,7 +9,7 @@ impl Food {
         Self { pos: rng.gen() }
     }
 
-    pub fn position(&self) -> Point2<f32> {
+    pub fn position(&self) -> Point2<f64> {
         self.pos
     }
 }

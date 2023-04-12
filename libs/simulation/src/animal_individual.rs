@@ -1,12 +1,12 @@
 use crate::*;
 
 pub struct AnimalIndividual {
-    fitness: f32,
+    fitness: f64,
     chromosome: ga::Chromosome,
 }
 
 impl ga::Individual for AnimalIndividual {
-    fn fitness(&self) -> f32 {
+    fn fitness(&self) -> f64 {
         self.fitness
     }
 
@@ -25,7 +25,7 @@ impl ga::Individual for AnimalIndividual {
 impl AnimalIndividual {
     pub fn from_animal(animal: &Animal) -> Self {
         Self {
-            fitness: animal.collisions as f32,
+            fitness: animal.collisions as f64,
             chromosome: animal.as_chromosome(),
         }
     }

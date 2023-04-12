@@ -2,13 +2,12 @@
 
 use crate::layer::*;
 pub use crate::layertopology::*;
-use std::iter::once;
+use nalgebra::{DMatrix, DVector};
 
 mod layer;
 mod layertopology;
 mod neuron;
 
-#[derive(Debug)]
 pub struct Network {
     layers: Vec<Layer>,
 }
@@ -19,10 +18,10 @@ impl Network {
         Self { layers }
     }
 
-    pub fn propagate(&self, inputs: Vec<f32>) -> Vec<f32> {
+    pub fn propagate(&self, input: DVector<f64>) -> DVector<f64> {
         self.layers
             .iter()
-            .fold(inputs, |inputs, layer| layer.propagate(inputs))
+            .fold(input, |input, layer| layer.propagate(input))
     }
 
     pub fn random(rng: &mut dyn rand::RngCore, layers: &[LayerTopology]) -> Self {
@@ -36,15 +35,14 @@ impl Network {
         }
     }
 
-    pub fn weights(&self) -> impl Iterator<Item = f32> + '_ {
+    pub fn weights(&self) -> impl Iterator<Item = f64> + '_ {
         self.layers
             .iter()
-            .flat_map(|layer| layer.neurons.iter())
-            .flat_map(|neuron| once(&neuron.bias).chain(&neuron.weights))
+            .flat_map(|layer| layer.weights.iter().chain(layer.biases.iter()))
             .copied()
     }
 
-    pub fn from_weights(layers: &[LayerTopology], weights: impl IntoIterator<Item = f32>) -> Self {
+    pub fn from_weights(layers: &[LayerTopology], weights: impl IntoIterator<Item = f64>) -> Self {
         assert!(layers.len() > 1);
 
         let mut weights = weights.into_iter();

@@ -1,45 +1,50 @@
-use crate::neuron::Neuron;
+use crate::*;
 
-#[derive(Debug)]
 pub(crate) struct Layer {
-    pub(crate) neurons: Vec<Neuron>,
+    pub(crate) weights: DMatrix<f64>,
+    pub(crate) biases: DVector<f64>,
 }
 
 impl Layer {
     #[cfg(test)]
-    pub(crate) fn new(neurons: Vec<Neuron>) -> Self {
-        Self { neurons }
-    }
-
-    pub(crate) fn propagate(&self, inputs: Vec<f32>) -> Vec<f32> {
-        self.neurons
-            .iter()
-            .map(|neuron| neuron.propagate(&inputs))
-            .collect()
-    }
-
-    pub fn random(
-        rng: &mut dyn rand::RngCore,
-        input_neurons: usize,
-        output_neurons: usize,
+    pub(crate) fn new(
+        weights: DMatrix<f64>,
+        biases: DVector<f64>,
+        activation_fn: Box<dyn Fn(&DVector<f64>) -> DVector<f64>>,
     ) -> Self {
+        Self { weights, biases }
+    }
+
+    pub(crate) fn propagate(&self, input: DVector<f64>) -> DVector<f64> {
+        layer::Layer::relu(&(&self.weights * input + &self.biases))
+    }
+
+    fn relu(input: &DVector<f64>) -> DVector<f64> {
+        input.map(|x| x.max(0.0))
+    }
+
+    //TODO: seeded rng
+    pub fn random(rng: &mut dyn rand::RngCore, input_size: usize, output_size: usize) -> Self {
         Self {
-            neurons: (0..output_neurons)
-                .map(|_| Neuron::random(rng, input_neurons))
-                .collect(),
+            weights: DMatrix::new_random(output_size, input_size),
+            biases: DVector::new_random(input_size),
         }
     }
 
     pub fn from_weights(
-        input_neurons: usize,
-        output_neurons: usize,
-        weights: &mut dyn Iterator<Item = f32>,
+        input_size: usize,
+        output_size: usize,
+        weights: &mut dyn Iterator<Item = f64>,
     ) -> Self {
-        Self {
-            neurons: (0..output_neurons)
-                .map(|_| Neuron::from_weights(input_neurons, weights))
-                .collect(),
-        }
+        let mut iter = weights.peekable();
+
+        let weights = iter.by_ref().take(input_size * output_size);
+        let weights = DMatrix::from_iterator(output_size, input_size, weights);
+
+        let biases = iter.by_ref().take(output_size);
+        let biases = DVector::from_iterator(input_size, biases);
+
+        Self { weights, biases }
     }
 }
 

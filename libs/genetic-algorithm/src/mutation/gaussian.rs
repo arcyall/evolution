@@ -3,12 +3,12 @@ use rand::Rng;
 
 #[derive(Clone, Debug)]
 pub struct GaussianMutation {
-    chance: f32,
-    coeff: f32,
+    chance: f64,
+    coeff: f64,
 }
 
 impl GaussianMutation {
-    pub fn new(chance: f32, coeff: f32) -> Self {
+    pub fn new(chance: f64, coeff: f64) -> Self {
         assert!((0.0..=1.0).contains(&chance));
 
         Self { chance, coeff }
@@ -21,7 +21,7 @@ impl MutationMethod for GaussianMutation {
             let sign = if rng.gen_bool(0.5) { -1.0 } else { 1.0 };
 
             if rng.gen_bool(self.chance as _) {
-                *gene += sign * self.coeff * rng.gen::<f32>()
+                *gene += sign * self.coeff * rng.gen::<f64>()
             }
         })
     }
@@ -35,7 +35,7 @@ mod test {
 
     use crate::{GaussianMutation, MutationMethod};
 
-    fn actual(chance: f32, coeff: f32) -> Vec<f32> {
+    fn actual(chance: f64, coeff: f64) -> Vec<f64> {
         let mut child = vec![1.0, 2.0, 3.0, 4.0, 5.0].into_iter().collect();
         let mut rng = ChaCha8Rng::from_seed(Default::default());
 
@@ -44,7 +44,7 @@ mod test {
         child.into_iter().collect()
     }
     mod zero_chance {
-        fn actual(coeff: f32) -> Vec<f32> {
+        fn actual(coeff: f64) -> Vec<f64> {
             super::actual(0.0, coeff)
         }
 
@@ -72,7 +72,7 @@ mod test {
         }
     }
     mod fifty_chance {
-        fn actual(coeff: f32) -> Vec<f32> {
+        fn actual(coeff: f64) -> Vec<f64> {
             super::actual(0.5, coeff)
         }
 
@@ -100,7 +100,7 @@ mod test {
         }
     }
     mod max_chance {
-        fn actual(coeff: f32) -> Vec<f32> {
+        fn actual(coeff: f64) -> Vec<f64> {
             super::actual(1.0, coeff)
         }
 
