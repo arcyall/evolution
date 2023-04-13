@@ -30,13 +30,10 @@ impl Network {
     }
 
     pub fn weights(&self) -> impl Iterator<Item = f32> + '_ {
-        self.layers.iter().flat_map(|layer| {
-            let Layer { weights, biases } = layer;
-            biases
-                .iter()
-                .flat_map(move |bias| weights.iter().chain(std::iter::once(bias)))
-                .copied()
-        })
+        self.layers
+            .iter()
+            .flat_map(|layer| layer.biases.iter().chain(layer.weights.iter()))
+            .copied()
     }
 
     pub fn from_weights(layers: &[LayerTopology], weights: impl IntoIterator<Item = f32>) -> Self {
@@ -95,18 +92,18 @@ mod test {
             let network = Network {
                 layers: vec![
                     Layer {
-                        weights: DMatrix::from_vec(2, 3, vec![0.2, 0.3, 0.4]),
+                        weights: DMatrix::from_vec(2, 2, vec![0.2, 0.3, 0.4, 0.5]),
                         biases: DVector::from_vec(vec![0.1]),
                     },
                     Layer {
-                        weights: DMatrix::from_vec(2, 3, vec![0.6, 0.7, 0.8]),
-                        biases: DVector::from_vec(vec![0.5]),
+                        weights: DMatrix::from_vec(2, 2, vec![0.7, 0.8, 0.9, 1.0]),
+                        biases: DVector::from_vec(vec![0.6]),
                     },
                 ],
             };
 
             let actual: Vec<f32> = network.weights().collect();
-            let expected = vec![0.2, 0.3, 0.4, 0.1, 0.6, 0.7, 0.8, 0.5];
+            let expected = vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
 
             assert_relative_eq!(actual.as_slice(), expected.as_slice());
         }

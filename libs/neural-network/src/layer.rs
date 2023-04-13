@@ -31,14 +31,11 @@ impl Layer {
 
         for _ in 0..output_size {
             biases.push(weights.next().unwrap());
-
-            for _ in 0..output_size {
-                weightsvec.push(weights.next().unwrap())
-            }
         }
 
-        println!("{:?}", weightsvec);
-        println!("{:?}", biases);
+        for _ in 0..input_size * output_size {
+            weightsvec.push(weights.next().unwrap())
+        }
 
         Self {
             weights: DMatrix::from_vec(output_size, input_size, weightsvec),
