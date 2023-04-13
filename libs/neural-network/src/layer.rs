@@ -5,6 +5,10 @@ pub(crate) struct Layer {
     pub(crate) biases: DVector<f32>,
 }
 
+pub struct LayerTopology {
+    pub neurons: usize,
+}
+
 impl Layer {
     pub(crate) fn propagate(&self, input: DVector<f32>) -> DVector<f32> {
         Self::relu(&(&self.weights * input + &self.biases))
@@ -14,10 +18,10 @@ impl Layer {
         input.map(|x| x.max(0.0))
     }
 
-    pub(crate) fn random(input_size: usize, output_size: usize) -> Self {
+    pub(crate) fn random(input_size: usize, output_size: usize, rng: &mut dyn RngCore) -> Self {
         Self {
-            weights: DMatrix::new_random(output_size, input_size),
-            biases: DVector::new_random(output_size),
+            weights: DMatrix::from_fn(output_size, input_size, |_, _| rng.gen_range(-1.0..1.0)),
+            biases: DVector::from_fn(output_size, |_, _| rng.gen_range(-1.0..1.0)),
         }
     }
 

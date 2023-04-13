@@ -91,8 +91,8 @@ impl Simulation {
             let vision = animal
                 .eye
                 .process_vision(animal.pos, animal.rot, &self.world.food);
-            let response = animal.brain.nn.propagate(vision);
 
+            let response = animal.brain.nn.propagate(vision);
             let speed = response[0].clamp(-SPEED_ACCEL, SPEED_ACCEL);
             let rot = response[1].clamp(-ROT_ACCEL, ROT_ACCEL);
 

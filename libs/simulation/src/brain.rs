@@ -5,9 +5,9 @@ pub struct Brain {
 }
 
 impl Brain {
-    pub fn random(eye: &Eye) -> Self {
+    pub fn random(eye: &Eye, rng: &mut dyn RngCore) -> Self {
         Self {
-            nn: nn::Network::random(&Self::topology(eye)),
+            nn: nn::Network::random(&Self::topology(eye), rng),
         }
     }
 

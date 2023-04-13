@@ -1,11 +1,11 @@
 #![feature(array_windows)]
 
 use crate::layer::*;
-pub use crate::layertopology::*;
 use nalgebra::{DMatrix, DVector};
+use rand::{Rng, RngCore};
+pub use crate::layer::LayerTopology;
 
 mod layer;
-mod layertopology;
 
 pub struct Network {
     layers: Vec<Layer>,
@@ -18,13 +18,13 @@ impl Network {
             .fold(input, |input, layer| layer.propagate(input))
     }
 
-    pub fn random(layers: &[LayerTopology]) -> Self {
+    pub fn random(layers: &[LayerTopology], rng: &mut dyn RngCore) -> Self {
         assert!(layers.len() > 1);
 
         Self {
             layers: layers
                 .array_windows::<2>()
-                .map(|[fst, snd]| Layer::random(fst.neurons, snd.neurons))
+                .map(|[fst, snd]| Layer::random(fst.neurons, snd.neurons, rng))
                 .collect(),
         }
     }
