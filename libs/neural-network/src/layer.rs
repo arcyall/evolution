@@ -7,21 +7,21 @@ pub(crate) struct Layer {
 
 impl Layer {
     pub(crate) fn propagate(&self, input: DVector<f32>) -> DVector<f32> {
-        layer::Layer::relu(&(&self.weights * input + &self.biases))
+        Self::relu(&(&self.weights * input + &self.biases))
     }
 
     fn relu(input: &DVector<f32>) -> DVector<f32> {
         input.map(|x| x.max(0.0))
     }
 
-    pub fn random(input_size: usize, output_size: usize) -> Self {
+    pub(crate) fn random(input_size: usize, output_size: usize) -> Self {
         Self {
             weights: DMatrix::new_random(output_size, input_size),
-            biases: DVector::new_random(input_size),
+            biases: DVector::new_random(output_size),
         }
     }
 
-    pub fn from_weights(
+    pub(crate) fn from_weights(
         input_size: usize,
         output_size: usize,
         weights: &mut dyn Iterator<Item = f32>,
