@@ -1,7 +1,7 @@
 use crate::*;
 
 pub trait Individual {
-    fn fitness(&self) -> f64;
+    fn fitness(&self) -> f32;
     fn chromosome(&self) -> &Chromosome;
     fn create(chromosome: Chromosome) -> Self;
 }
@@ -10,12 +10,12 @@ pub trait Individual {
 #[derive(PartialEq)]
 pub enum TestIndividual {
     WithChromosome { chromosome: Chromosome },
-    WithFitness { fitness: f64 },
+    WithFitness { fitness: f32 },
 }
 
 #[cfg(test)]
 impl TestIndividual {
-    pub fn new(fitness: f64) -> Self {
+    pub fn new(fitness: f32) -> Self {
         Self::WithFitness { fitness }
     }
 }
@@ -33,7 +33,7 @@ impl Individual for TestIndividual {
         Self::WithChromosome { chromosome }
     }
 
-    fn fitness(&self) -> f64 {
+    fn fitness(&self) -> f32 {
         match self {
             TestIndividual::WithChromosome { chromosome } => chromosome.iter().sum(),
             TestIndividual::WithFitness { fitness } => *fitness,

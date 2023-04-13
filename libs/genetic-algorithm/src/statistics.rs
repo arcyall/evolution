@@ -1,9 +1,9 @@
 use crate::*;
 
 pub struct Statistics {
-    min_fitness: f64,
-    max_fitness: f64,
-    avg_fitness: f64,
+    min_fitness: f32,
+    max_fitness: f32,
+    avg_fitness: f32,
 }
 
 impl Statistics {
@@ -28,19 +28,19 @@ impl Statistics {
         Self {
             min_fitness,
             max_fitness,
-            avg_fitness: sum_fitness / (population.len() as f64),
+            avg_fitness: sum_fitness / (population.len() as f32),
         }
     }
 
-    pub fn min_fitness(&self) -> f64 {
+    pub fn min_fitness(&self) -> f32 {
         self.min_fitness
     }
 
-    pub fn max_fitness(&self) -> f64 {
+    pub fn max_fitness(&self) -> f32 {
         self.max_fitness
     }
 
-    pub fn avg_fitness(&self) -> f64 {
+    pub fn avg_fitness(&self) -> f32 {
         self.avg_fitness
     }
 }

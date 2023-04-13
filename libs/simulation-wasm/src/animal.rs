@@ -2,10 +2,10 @@ use crate::*;
 
 #[derive(Serialize)]
 pub struct Animal {
-    pub x: f64,
-    pub y: f64,
-    pub rot: f64,
-    pub speed: f64,
+    pub x: f32,
+    pub y: f32,
+    pub rot: f32,
+    pub speed: f32,
 }
 
 impl From<&sim::Animal> for Animal {

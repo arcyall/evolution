@@ -1,18 +1,18 @@
 use crate::*;
-use std::f64::consts::{FRAC_PI_4, PI};
+use std::f32::consts::{FRAC_PI_4, PI};
 
-const FOV_RANGE: f64 = 0.25;
-const FOV_ANGLE: f64 = PI + FRAC_PI_4;
+const FOV_RANGE: f32 = 0.25;
+const FOV_ANGLE: f32 = PI + FRAC_PI_4;
 const CELLS: usize = 9;
 
 pub struct Eye {
-    fov_range: f64,
-    fov_angle: f64,
+    fov_range: f32,
+    fov_angle: f32,
     cells: usize,
 }
 
 impl Eye {
-    fn new(fov_range: f64, fov_angle: f64, cells: usize) -> Self {
+    fn new(fov_range: f32, fov_angle: f32, cells: usize) -> Self {
         assert!(fov_range > 0.0);
         assert!(fov_angle > 0.0);
         assert!(cells > 0);
@@ -28,7 +28,12 @@ impl Eye {
         self.cells
     }
 
-    pub fn process_vision(&self, pos: Point2<f64>, rot: Rotation2<f64>, food: &[Food]) -> DVector<f64> {
+    pub fn process_vision(
+        &self,
+        pos: Point2<f32>,
+        rot: Rotation2<f32>,
+        food: &[Food],
+    ) -> DVector<f32> {
         let mut cells = vec![0.0; self.cells];
 
         for food in food {
@@ -50,7 +55,7 @@ impl Eye {
             let angle = angle + self.fov_angle / 2.0;
 
             let cell = angle / self.fov_angle;
-            let cell = cell * (self.cells as f64);
+            let cell = cell * (self.cells as f32);
             let cell = (cell as usize).min(cells.len() - 1);
 
             let energy = (self.fov_range - dist) / self.fov_range;
@@ -70,7 +75,7 @@ impl Default for Eye {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::FRAC_PI_2;
+    use std::f32::consts::FRAC_PI_2;
 
     use super::*;
     use test_case::test_case;
@@ -79,11 +84,11 @@ mod tests {
 
     struct TestCase {
         food: Vec<Food>,
-        fov_range: f64,
-        fov_angle: f64,
-        x: f64,
-        y: f64,
-        rot: f64,
+        fov_range: f32,
+        fov_angle: f32,
+        x: f32,
+        y: f32,
+        rot: f32,
         expected_vision: &'static str,
     }
 
@@ -98,7 +103,7 @@ mod tests {
             );
             let actual_vision = actual_vision
                 .into_iter()
-                .map(|cell| {
+                .map(|&cell| {
                     if cell >= 0.7 {
                         "#"
                     } else if cell >= 0.3 {
@@ -116,7 +121,7 @@ mod tests {
         }
     }
 
-    fn food(x: f64, y: f64) -> Food {
+    fn food(x: f32, y: f32) -> Food {
         Food {
             pos: Point2::new(x, y),
         }
@@ -132,7 +137,7 @@ mod tests {
     #[test_case(0.3, "             ")]
     #[test_case(0.2, "             ")]
     #[test_case(0.1, "             ")]
-    fn test_ranges(fov_range: f64, expected_vision: &'static str) {
+    fn test_ranges(fov_range: f32, expected_vision: &'static str) {
         TestCase {
             food: vec![food(1.0, 0.5)],
             fov_range,
@@ -156,7 +161,7 @@ mod tests {
     #[test_case(2.00 * PI, "         +   ")]
     #[test_case(2.25 * PI, "        +    ")]
     #[test_case(2.50 * PI, "      +      ")]
-    fn test_rot(rot: f64, expected_vision: &'static str) {
+    fn test_rot(rot: f32, expected_vision: &'static str) {
         TestCase {
             food: vec![food(0.5, 1.0)],
             fov_range: 1.0,
@@ -189,7 +194,7 @@ mod tests {
     #[test_case(0.5, 0.8, "+  +         ")]
     #[test_case(0.5, 0.9, ". +          ")]
     #[test_case(0.5, 1.0, "+            ")]
-    fn test_positions(x: f64, y: f64, expected_vision: &'static str) {
+    fn test_positions(x: f32, y: f32, expected_vision: &'static str) {
         TestCase {
             food: vec![food(1.0, 0.4), food(1.0, 0.6)],
             fov_range: 1.0,
@@ -210,7 +215,7 @@ mod tests {
     #[test_case(1.50 * PI, ".   .+ +.   .")]
     #[test_case(1.75 * PI, ".   .+ +.   .")]
     #[test_case(2.00 * PI, "+.  .+ +.  .+")]
-    fn test_angles(fov_angle: f64, expected_vision: &'static str) {
+    fn test_angles(fov_angle: f32, expected_vision: &'static str) {
         TestCase {
             food: vec![
                 food(0.0, 0.0),

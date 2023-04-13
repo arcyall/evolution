@@ -2,8 +2,8 @@ use crate::*;
 
 #[derive(Serialize)]
 pub struct Food {
-    pub x: f64,
-    pub y: f64,
+    pub x: f32,
+    pub y: f32,
 }
 
 impl From<&sim::Food> for Food {
