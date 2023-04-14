@@ -1,11 +1,14 @@
 #![feature(array_windows)]
+#![feature(type_alias_impl_trait)]
+#![feature(impl_trait_in_assoc_type)]
 
+pub use crate::{layer::LayerTopology, geneticalgorithm::*};
 use crate::layer::*;
 use nalgebra::{DMatrix, DVector};
 use rand::{Rng, RngCore};
-pub use crate::layer::LayerTopology;
 
 mod layer;
+mod geneticalgorithm;
 
 pub struct Network {
     layers: Vec<Layer>,

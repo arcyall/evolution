@@ -2,19 +2,19 @@ use crate::*;
 
 pub struct AnimalIndividual {
     fitness: f32,
-    chromosome: ga::Chromosome,
+    chromosome: nn::Chromosome,
 }
 
-impl ga::Individual for AnimalIndividual {
+impl nn::Individual for AnimalIndividual {
     fn fitness(&self) -> f32 {
         self.fitness
     }
 
-    fn chromosome(&self) -> &ga::Chromosome {
+    fn chromosome(&self) -> &nn::Chromosome {
         &self.chromosome
     }
 
-    fn create(chromosome: ga::Chromosome) -> Self {
+    fn create(chromosome: nn::Chromosome) -> Self {
         Self {
             fitness: 0.0,
             chromosome,

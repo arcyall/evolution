@@ -1,10 +1,6 @@
-#![feature(type_alias_impl_trait)]
-#![feature(impl_trait_in_assoc_type)]
-
 pub use self::{
     chromosome::*, crossover::*, individual::*, mutation::*, selection::*, statistics::*,
 };
-use rand::RngCore;
 
 mod chromosome;
 mod crossover;
@@ -12,6 +8,8 @@ mod individual;
 mod mutation;
 mod selection;
 mod statistics;
+
+use crate::*;
 
 pub struct GeneticAlgorithm<S> {
     selection_method: S,

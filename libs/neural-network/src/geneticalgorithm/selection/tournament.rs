@@ -1,5 +1,4 @@
 use crate::*;
-use rand::Rng;
 
 #[derive(Default)]
 pub struct TournamentSelection;

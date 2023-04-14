@@ -1,8 +1,8 @@
 pub use self::{animal::*, animal_individual::*, brain::*, eye::*, food::*, world::*};
-use lib_genetic_algorithm as ga;
 use lib_neural_network as nn;
 use nalgebra::{distance, wrap, DVector, Point2, Rotation2, Vector2};
 use rand::{Rng, RngCore};
+use rayon::prelude::*;
 use std::f32::consts::FRAC_PI_2;
 
 mod animal;
@@ -21,7 +21,7 @@ const ROT_ACCEL: f32 = FRAC_PI_2;
 
 pub struct Simulation {
     world: World,
-    ga: ga::GeneticAlgorithm<ga::TournamentSelection>,
+    ga: nn::GeneticAlgorithm<nn::TournamentSelection>,
     age: usize,
 }
 
@@ -29,10 +29,10 @@ impl Simulation {
     pub fn random(rng: &mut dyn RngCore) -> Self {
         Self {
             world: World::random(rng),
-            ga: ga::GeneticAlgorithm::new(
-                ga::TournamentSelection::default(),
-                ga::UniformCrossover::default(),
-                ga::GaussianMutation::new(0.01, 0.3),
+            ga: nn::GeneticAlgorithm::new(
+                nn::TournamentSelection::default(),
+                nn::UniformCrossover::default(),
+                nn::GaussianMutation::new(0.01, 0.3),
             ),
             age: 0,
         }
@@ -42,7 +42,13 @@ impl Simulation {
         &self.world
     }
 
-    pub fn step(&mut self, rng: &mut dyn RngCore) -> Option<ga::Statistics> {
+    pub fn step(&mut self, rng: &mut dyn RngCore) -> Option<nn::Statistics> {
+        // self.world.animals.par_iter_mut().for_each(|animal| {
+        //     let mut rng = thread_rng();
+        //     animal.process_collision(&mut rng, &mut self.world.food);
+        //     animal.process_brain(&self.world.food);
+        //     animal.process_movement();
+        // });
         self.process_collisions(rng);
         self.process_brains();
         self.process_movement();
@@ -56,7 +62,7 @@ impl Simulation {
         }
     }
 
-    pub fn train(&mut self, rng: &mut dyn RngCore) -> ga::Statistics {
+    pub fn train(&mut self, rng: &mut dyn RngCore) -> nn::Statistics {
         loop {
             if let Some(stats) = self.step(rng) {
                 return stats;
@@ -87,7 +93,7 @@ impl Simulation {
     }
 
     fn process_brains(&mut self) {
-        for animal in &mut self.world.animals {
+        self.world.animals.par_iter_mut().for_each(|animal| {
             let vision = animal
                 .eye
                 .process_vision(animal.pos, animal.rot, &self.world.food);
@@ -98,10 +104,10 @@ impl Simulation {
 
             animal.speed = (animal.speed + speed).clamp(SPEED_MIN, SPEED_MAX);
             animal.rot = Rotation2::new(animal.rot.angle() + rot);
-        }
+        })
     }
 
-    fn evolve(&mut self, rng: &mut dyn RngCore) -> ga::Statistics {
+    fn evolve(&mut self, rng: &mut dyn RngCore) -> nn::Statistics {
         self.age = 0;
 
         let current_pop: Vec<AnimalIndividual> = self
