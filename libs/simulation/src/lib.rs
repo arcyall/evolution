@@ -1,7 +1,7 @@
 pub use self::{animal::*, animal_individual::*, brain::*, eye::*, food::*, world::*};
 use lib_genetic_algorithm as ga;
 use lib_neural_network as nn;
-use nalgebra::{distance, wrap, Point2, Rotation2, Vector2};
+use nalgebra::{distance, wrap, DVector, Point2, Rotation2, Vector2};
 use rand::{Rng, RngCore};
 use std::f32::consts::FRAC_PI_2;
 
@@ -91,8 +91,8 @@ impl Simulation {
             let vision = animal
                 .eye
                 .process_vision(animal.pos, animal.rot, &self.world.food);
-            let response = animal.brain.nn.propagate(vision);
 
+            let response = animal.brain.nn.propagate(vision);
             let speed = response[0].clamp(-SPEED_ACCEL, SPEED_ACCEL);
             let rot = response[1].clamp(-ROT_ACCEL, ROT_ACCEL);
 

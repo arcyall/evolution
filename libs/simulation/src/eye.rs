@@ -28,7 +28,12 @@ impl Eye {
         self.cells
     }
 
-    pub fn process_vision(&self, pos: Point2<f32>, rot: Rotation2<f32>, food: &[Food]) -> Vec<f32> {
+    pub fn process_vision(
+        &self,
+        pos: Point2<f32>,
+        rot: Rotation2<f32>,
+        food: &[Food],
+    ) -> DVector<f32> {
         let mut cells = vec![0.0; self.cells];
 
         for food in food {
@@ -58,7 +63,7 @@ impl Eye {
             cells[cell] += energy;
         }
 
-        cells
+        DVector::from_vec(cells)
     }
 }
 
@@ -98,7 +103,7 @@ mod tests {
             );
             let actual_vision = actual_vision
                 .into_iter()
-                .map(|cell| {
+                .map(|&cell| {
                     if cell >= 0.7 {
                         "#"
                     } else if cell >= 0.3 {

@@ -12,6 +12,8 @@ pub struct Simulation {
 impl Simulation {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
+        console_error_panic_hook::set_once();
+
         let mut rng = thread_rng();
         let sim = sim::Simulation::random(&mut rng);
 

@@ -12,7 +12,7 @@ pub struct Animal {
 impl Animal {
     pub fn random(rng: &mut dyn RngCore) -> Self {
         let eye = Eye::default();
-        let brain = Brain::random(rng, &eye);
+        let brain = Brain::random(&eye, rng);
 
         Self {
             pos: rng.gen(),
