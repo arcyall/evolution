@@ -11,25 +11,22 @@ mod statistics;
 
 use crate::*;
 
-pub struct GeneticAlgorithm<S> {
-    selection_method: S,
-    crossover_method: Box<dyn CrossoverMethod>,
-    mutation_method: Box<dyn MutationMethod>,
+pub struct GeneticAlgorithm {
+    selection_method: Selection,
+    crossover_method: Crossover,
+    mutation_method: Mutation,
 }
 
-impl<S> GeneticAlgorithm<S>
-where
-    S: SelectionMethod,
-{
+impl GeneticAlgorithm {
     pub fn new(
-        selection_method: S,
-        crossover_method: impl CrossoverMethod + 'static,
-        mutation_method: impl MutationMethod + 'static,
+        selection_method: Selection,
+        crossover_method: Crossover,
+        mutation_method: Mutation,
     ) -> Self {
         Self {
             selection_method,
-            crossover_method: Box::new(crossover_method),
-            mutation_method: Box::new(mutation_method),
+            crossover_method,
+            mutation_method,
         }
     }
 

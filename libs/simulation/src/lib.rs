@@ -21,7 +21,7 @@ const ROT_ACCEL: f32 = FRAC_PI_2;
 
 pub struct Simulation {
     world: World,
-    ga: nn::GeneticAlgorithm<nn::TournamentSelection>,
+    ga: nn::GeneticAlgorithm,
     age: usize,
 }
 
@@ -30,9 +30,9 @@ impl Simulation {
         Self {
             world: World::random(rng),
             ga: nn::GeneticAlgorithm::new(
-                nn::TournamentSelection::default(),
-                nn::UniformCrossover::default(),
-                nn::GaussianMutation::new(0.01, 0.3),
+                nn::Selection::Tournament,
+                nn::Crossover::Uniform,
+                nn::Mutation::Gaussian(0.01, 0.3),
             ),
             age: 0,
         }
