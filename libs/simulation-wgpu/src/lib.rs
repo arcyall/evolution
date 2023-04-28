@@ -1,5 +1,5 @@
+use nalgebra::{Matrix4, Perspective3, Point3, Vector3, Point};
 use std::vec;
-
 use wgpu::util::DeviceExt;
 use winit::{
     event::*,
@@ -7,8 +7,14 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
+mod texture;
+
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
+
+fn rgb_to_srgb(rgb: f32) -> f32 {
+    (rgb / 255.).powf(2.2)
+}
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub async fn run() {
@@ -22,7 +28,10 @@ pub async fn run() {
     }
 
     let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let window = WindowBuilder::new()
+        .with_title("evolution")
+        .build(&event_loop)
+        .unwrap();
 
     #[cfg(target_arch = "wasm32")]
     {
@@ -84,6 +93,35 @@ pub async fn run() {
     });
 }
 
+#[rustfmt::skip]
+pub const OPENGL_TO_WGPU_MATRIX: Matrix4<f32> = Matrix4::new(
+    1.0, 0.0, 0.0, 0.0,
+    0.0, 1.0, 0.0, 0.0,
+    0.0, 0.0, 0.5, 0.0,
+    0.0, 0.0, 0.5, 1.0,
+);
+
+
+struct Camera {
+    eye: Point3<f32>,
+    target: Point3<f32>,
+    up: Vector3<f32>,
+    aspect: f32,
+    fovy: f32,
+    znear: f32,
+    zfar: f32,
+}
+
+impl Camera {
+    fn build_view_projection_matrix(&self) -> Matrix4<f32> {
+        let view = Matrix4::look_at_rh(&self.eye, &self.target, &self.up);
+        let proj =
+            Perspective3::new(self.aspect, self.fovy, self.znear, self.zfar).to_homogeneous();
+
+        return OPENGL_TO_WGPU_MATRIX * proj * view;
+    }
+}
+
 struct State {
     surface: wgpu::Surface,
     device: wgpu::Device,
@@ -91,11 +129,12 @@ struct State {
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
     window: Window,
+    camera: Camera,
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
-    num_vertices: u32,
     index_buffer: wgpu::Buffer,
     num_indices: u32,
+    // diffuse_bind_group: wgpu::BindGroup,
 }
 
 impl State {
@@ -199,6 +238,26 @@ impl State {
             multiview: None,
         });
 
+        //circle
+
+        // let angle = std::f32::consts::PI * 2.0 / 64.0;
+
+        // let verts = (0..64)
+        //     .map(|i| {
+        //         let theta = angle * i as f32;
+        //         Vertex {
+        //             pos: [0.5 * theta.cos(), -0.5 * theta.sin(), 0.0],
+        //             color: [(1.0 + theta.cos()) / 2.0, (1.0 + theta.sin()) / 2.0, 1.0],
+        //         }
+        //     })
+        //     .collect::<Vec<_>>();
+
+        // let tris = 64 - 2;
+
+        // let indices = (1u16..tris + 1)
+        //     .flat_map(|i| vec![i + 1, i, 0])
+        //     .collect::<Vec<_>>();
+
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
             contents: bytemuck::cast_slice(VERTICES),
@@ -211,8 +270,21 @@ impl State {
             usage: wgpu::BufferUsages::INDEX,
         });
 
-        let num_vertices = VERTICES.len() as u32;
         let num_indices = INDICES.len() as u32;
+
+        // let num_vertices = verts.len() as u32;
+
+        // let num_indices = indices.len() as u32;
+
+        let camera = Camera { 
+            eye: Point3::new(0.0, 1.0, 2.0),
+            target: Point3::new(0.0, 0.0, 0.0),
+            up: Vector3::y(),
+            aspect: config.width as f32 / config.height as f32,
+            fovy: 45.0,
+            znear: 0.1,
+            zfar: 100.0,
+        };
 
         Self {
             window,
@@ -221,11 +293,12 @@ impl State {
             queue,
             config,
             size,
+            camera,
             render_pipeline,
             vertex_buffer,
-            num_vertices,
             index_buffer,
             num_indices,
+            // diffuse_bind_group,
         }
     }
 
@@ -279,6 +352,7 @@ impl State {
             });
 
             render_pass.set_pipeline(&self.render_pipeline);
+            // render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
             render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
@@ -320,16 +394,26 @@ impl Vertex {
 }
 
 const VERTICES: &[Vertex] = &[
-    Vertex { pos: [-0.0868241, 0.49240386, 0.0], color: [0.5, 0.0, 0.5] },
-    Vertex { pos: [-0.49513406, 0.06958647, 0.0], color: [0.5, 0.0, 0.5] },
-    Vertex { pos: [-0.21918549, -0.44939706, 0.0], color: [0.5, 0.0, 0.5] },
-    Vertex { pos: [0.35966998, -0.3473291, 0.0], color: [0.5, 0.0, 0.5] },
-    Vertex { pos: [0.44147372, 0.2347359, 0.0], color: [0.5, 0.0, 0.5] },
+    Vertex {
+        pos: [-0.0868241, 0.49240386, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        pos: [-0.49513406, 0.06958647, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        pos: [-0.21918549, -0.44939706, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        pos: [0.35966998, -0.3473291, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
+    Vertex {
+        pos: [0.44147372, 0.2347359, 0.0],
+        color: [0.5, 0.0, 0.5],
+    },
 ];
 
-const INDICES: &[u16] = &[
-    0, 1, 4,
-    1, 2, 4,
-    2, 3, 4,
-];
-
+const INDICES: &[u16] = &[0, 1, 4, 1, 2, 4, 2, 3, 4];

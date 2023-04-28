@@ -7,10 +7,13 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+anyhow = "1.0.70"
 bytemuck = { version = "1.13.1", features = ["derive"] }
 cfg-if = "1.0.0"
 env_logger = "0.10.0"
+image = { version = "0.24.6", features = ["png", "jpeg"] }
 log = "0.4.17"
+nalgebra = "0.32.2"
 pollster = "0.3.0"
 wgpu = "0.15.1"
 winit = "0.28.3"
