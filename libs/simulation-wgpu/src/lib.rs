@@ -1,5 +1,5 @@
-use nalgebra::{Matrix4, Perspective3, Point3, Vector3, Quaternion};
-use self::{texture::*, camera::*};
+use self::{camera::*, instance::*, texture::*};
+use nalgebra::{Matrix4, Perspective3, Point3, Quaternion, Unit, Vector3};
 use std::vec;
 use wgpu::util::DeviceExt;
 use winit::{
@@ -8,8 +8,9 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-mod texture;
 mod camera;
+mod instance;
+mod texture;
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -110,6 +111,8 @@ struct State {
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
+    instances: Vec<Instance>,
+    instance_buffer: wgpu::Buffer,
     num_indices: u32,
     // diffuse_bind_group: wgpu::BindGroup,
 }
@@ -216,14 +219,35 @@ impl State {
             label: Some("Camera Bind Group"),
         });
 
+        let instances = (0..INSTANCES_PER_ROW)
+            .flat_map(|z| {
+                (0..INSTANCES_PER_ROW).map(move |x| {
+                    let position = Vector3::new(x as f32, 0.0, z as f32) - INSTANCE_DISPLACEMENT;
+                    let rotation = if position.x == 0.0 && position.z == 0.0 && position.y == 0.0 {
+                        Unit::new_normalize(Quaternion::from_parts(0.0, Vector3::z()))
+                    } else {
+                        Unit::new_normalize(Quaternion::from_parts(45.0, position.normalize()))
+                    };
+
+                    Instance { position, rotation }
+                })
+            })
+            .collect::<Vec<_>>();
+
+        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+
+        let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Instance Buffer"),
+            contents: bytemuck::cast_slice(&instance_data),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+
         let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
 
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[
-                    &camera_bind_group_layout,
-                ],
+                bind_group_layouts: &[&camera_bind_group_layout],
                 push_constant_ranges: &[],
             });
 
@@ -233,7 +257,7 @@ impl State {
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: "vs_main",
-                buffers: &[Vertex::desc()],
+                buffers: &[Vertex::desc(), InstanceRaw::desc()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
@@ -316,6 +340,8 @@ impl State {
             vertex_buffer,
             index_buffer,
             num_indices,
+            instances,
+            instance_buffer,
             // diffuse_bind_group,
         }
     }
@@ -340,7 +366,11 @@ impl State {
     fn update(&mut self) {
         self.camera_controller.update_camera(&mut self.camera);
         self.camera_uniform.update_view_proj(&self.camera);
-        self.queue.write_buffer(&self.camera_buffer, 0, bytemuck::cast_slice(&[self.camera_uniform]));
+        self.queue.write_buffer(
+            &self.camera_buffer,
+            0,
+            bytemuck::cast_slice(&[self.camera_uniform]),
+        );
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -377,8 +407,9 @@ impl State {
             // render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
             render_pass.set_bind_group(0, &self.camera_bind_group, &[]);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+            render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
+            render_pass.draw_indexed(0..self.num_indices, 0, 0..self.instances.len() as u32);
         }
 
         self.queue.submit(std::iter::once(encoder.finish()));
@@ -440,3 +471,10 @@ const VERTICES: &[Vertex] = &[
 ];
 
 const INDICES: &[u16] = &[0, 1, 4, 1, 2, 4, 2, 3, 4];
+
+const INSTANCES_PER_ROW: u32 = 10;
+const INSTANCE_DISPLACEMENT: Vector3<f32> = Vector3::new(
+    INSTANCES_PER_ROW as f32 * 0.5,
+    0.0,
+    INSTANCES_PER_ROW as f32 * 0.5,
+);
