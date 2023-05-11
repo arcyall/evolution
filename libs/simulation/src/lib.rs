@@ -43,15 +43,13 @@ impl Simulation {
     }
 
     pub fn step(&mut self, rng: &mut dyn RngCore) -> Option<nn::Statistics> {
-        // self.world.animals.par_iter_mut().for_each(|animal| {
-        //     let mut rng = thread_rng();
-        //     animal.process_collision(&mut rng, &mut self.world.food);
-        //     animal.process_brain(&self.world.food);
-        //     animal.process_movement();
-        // });
+
         self.process_collisions(rng);
-        self.process_brains();
-        self.process_movement();
+        self.world.animals.par_iter_mut().for_each(|animal| {
+            animal.process_brain(&self.world.food);
+            animal.process_movement();
+        });
+
 
         self.age += 1;
 
@@ -70,15 +68,6 @@ impl Simulation {
         }
     }
 
-    fn process_movement(&mut self) {
-        for animal in &mut self.world.animals {
-            animal.pos += animal.rot * Vector2::new(0.0, animal.speed);
-
-            animal.pos.x = wrap(animal.pos.x, 0.0, 1.0);
-            animal.pos.y = wrap(animal.pos.y, 0.0, 1.0);
-        }
-    }
-
     fn process_collisions(&mut self, rng: &mut dyn RngCore) {
         for animal in &mut self.world.animals {
             for food in &mut self.world.food {
@@ -90,21 +79,6 @@ impl Simulation {
                 }
             }
         }
-    }
-
-    fn process_brains(&mut self) {
-        self.world.animals.par_iter_mut().for_each(|animal| {
-            let vision = animal
-                .eye
-                .process_vision(animal.pos, animal.rot, &self.world.food);
-
-            let response = animal.brain.nn.propagate(vision);
-            let speed = response[0].clamp(-SPEED_ACCEL, SPEED_ACCEL);
-            let rot = response[1].clamp(-ROT_ACCEL, ROT_ACCEL);
-
-            animal.speed = (animal.speed + speed).clamp(SPEED_MIN, SPEED_MAX);
-            animal.rot = Rotation2::new(animal.rot.angle() + rot);
-        })
     }
 
     fn evolve(&mut self, rng: &mut dyn RngCore) -> nn::Statistics {

@@ -47,34 +47,23 @@ impl Animal {
         Self::new(eye, brain, rng)
     }
 
-    // pub(crate) fn process_collision(&mut self, rng: &mut dyn RngCore, food: &mut Vec<Food>) {
-    //     for food in food {
-    //         let dist = distance(&self.pos, &food.pos);
+    pub(crate) fn process_brain(&mut self, food: &[Food]) {
+        let vision = self.eye.process_vision(self.pos, self.rot, food);
 
-    //         if dist <= 0.02 {
-    //             self.collisions += 1;
-    //             food.pos = rng.gen();
-    //         }
-    //     }
-    // }
+        let response = self.brain.nn.propagate(vision);
+        let speed = response[0].clamp(-SPEED_ACCEL, SPEED_ACCEL);
+        let rot = response[1].clamp(-ROT_ACCEL, ROT_ACCEL);
 
-    // pub(crate) fn process_brain(&mut self, food: &[Food]) {
-    //     let vision = self.eye.process_vision(self.pos, self.rot, &food);
+        self.speed = (self.speed + speed).clamp(SPEED_MIN, SPEED_MAX);
+        self.rot = Rotation2::new(self.rot.angle() + rot);
+    }
 
-    //     let response = self.brain.nn.propagate(vision);
-    //     let speed = response[0].clamp(-SPEED_ACCEL, SPEED_ACCEL);
-    //     let rot = response[1].clamp(-ROT_ACCEL, ROT_ACCEL);
+    pub(crate) fn process_movement(&mut self) {
+        self.pos += self.rot * Vector2::new(0.0, self.speed);
 
-    //     self.speed = (self.speed + speed).clamp(SPEED_MIN, SPEED_MAX);
-    //     self.rot = Rotation2::new(self.rot.angle() + rot);
-    // }
-
-    // pub(crate) fn process_movement(&mut self) {
-    //     self.pos += self.rot * Vector2::new(0.0, self.speed);
-
-    //     self.pos.x = wrap(self.pos.x, 0.0, 1.0);
-    //     self.pos.y = wrap(self.pos.y, 0.0, 1.0);
-    // }
+        self.pos.x = wrap(self.pos.x, 0.0, 1.0);
+        self.pos.y = wrap(self.pos.y, 0.0, 1.0);
+    }
 
     fn new(eye: Eye, brain: Brain, rng: &mut dyn RngCore) -> Self {
         Self {
