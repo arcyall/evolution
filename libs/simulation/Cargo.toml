@@ -10,6 +10,7 @@ nalgebra = { version = "0.32.2", features = ["rand-no-std"] }
 rand = "0.8.5"
 lib-neural-network = { path = "../neural-network" }
 rayon = "1.7.0"
+serde = { version = "1.0.163", features = ["derive"] }
 
 [dev-dependencies]
 test-case = "3.0.0"

@@ -10,18 +10,10 @@ pub struct Animal {
 }
 
 impl Animal {
-    pub fn random(rng: &mut dyn RngCore) -> Self {
-        let eye = Eye::default();
-        let brain = Brain::random(&eye, rng);
+    pub fn random(rng: &mut dyn RngCore, config: &Config) -> Self {
+        let brain = Brain::random(config, rng);
 
-        Self {
-            pos: rng.gen(),
-            rot: rng.gen(),
-            speed: 0.002,
-            eye,
-            brain,
-            collisions: 0,
-        }
+        Self::new(config, brain, rng)
     }
 
     pub fn position(&self) -> Point2<f32> {
@@ -40,21 +32,20 @@ impl Animal {
         self.brain.as_chromosome()
     }
 
-    pub(crate) fn from_chromosome(chromosome: nn::Chromosome, rng: &mut dyn RngCore) -> Self {
-        let eye = Eye::default();
-        let brain = Brain::from_chromosome(chromosome, &eye);
+    pub(crate) fn from_chromosome(chromosome: nn::Chromosome, rng: &mut dyn RngCore, config: &Config) -> Self {
+        let brain = Brain::from_chromosome(chromosome, config);
 
-        Self::new(eye, brain, rng)
+        Self::new(config, brain, rng)
     }
 
-    pub(crate) fn process_brain(&mut self, food: &[Food]) {
+    pub(crate) fn process_brain(&mut self, food: &[Food], config: &Config) {
         let vision = self.eye.process_vision(self.pos, self.rot, food);
 
         let response = self.brain.nn.propagate(vision);
-        let speed = response[0].clamp(-SPEED_ACCEL, SPEED_ACCEL);
-        let rot = response[1].clamp(-ROT_ACCEL, ROT_ACCEL);
+        let speed = response[0].clamp(-config.speed_accel, config.speed_accel);
+        let rot = response[1].clamp(-config.rot_accel, config.rot_accel);
 
-        self.speed = (self.speed + speed).clamp(SPEED_MIN, SPEED_MAX);
+        self.speed = (self.speed + speed).clamp(config.speed_min, config.speed_min);
         self.rot = Rotation2::new(self.rot.angle() + rot);
     }
 
@@ -65,12 +56,12 @@ impl Animal {
         self.pos.y = wrap(self.pos.y, 0.0, 1.0);
     }
 
-    fn new(eye: Eye, brain: Brain, rng: &mut dyn RngCore) -> Self {
+    fn new(config: &Config, brain: Brain, rng: &mut dyn RngCore) -> Self {
         Self {
             pos: rng.gen(),
             rot: rng.gen(),
-            speed: 0.002,
-            eye,
+            speed: config.speed_max,
+            eye: Eye::new(config),
             brain,
             collisions: 0,
         }

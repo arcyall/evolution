@@ -1,5 +1,6 @@
 use crate::*;
 
+#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize)]
 pub enum Crossover {
     Uniform,
 }

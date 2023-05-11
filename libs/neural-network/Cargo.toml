@@ -9,6 +9,7 @@ edition = "2021"
 nalgebra = { version = "0.32.2", features = ["rand"] }
 rand = "0.8.5"
 rand_chacha = "0.3.1"
+serde = { version = "1.0.163", features = ["derive"] }
 
 [dev-dependencies]
 approx = "0.5.1"

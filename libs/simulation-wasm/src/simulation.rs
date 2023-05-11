@@ -11,13 +11,22 @@ pub struct Simulation {
 #[wasm_bindgen]
 impl Simulation {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
+    pub fn new(config: JsValue) -> Self {
         console_error_panic_hook::set_once();
 
+        let config: sim::Config = serde_wasm_bindgen::from_value(config).unwrap();
         let mut rng = thread_rng();
-        let sim = sim::Simulation::random(&mut rng);
+        let sim = sim::Simulation::random(&mut rng, config);
 
         Self { rng, sim }
+    }
+
+    pub fn default_config() -> JsValue {
+        serde_wasm_bindgen::to_value(&sim::Config::default()).unwrap()
+    }
+
+    pub fn config(&self) -> JsValue {
+        serde_wasm_bindgen::to_value(self.sim.config()).unwrap()
     }
 
     pub fn world(&self) -> JsValue {

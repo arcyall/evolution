@@ -1,5 +1,6 @@
 use crate::*;
 
+#[derive(Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
 pub enum Mutation {
     /// Mutation with a gaussian distribution.
     /// (chance, coeff)

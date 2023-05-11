@@ -1,9 +1,4 @@
 use crate::*;
-use std::f32::consts::{FRAC_PI_4, PI};
-
-const FOV_RANGE: f32 = 0.25;
-const FOV_ANGLE: f32 = PI + FRAC_PI_4;
-const CELLS: usize = 9;
 
 pub struct Eye {
     fov_range: f32,
@@ -12,7 +7,9 @@ pub struct Eye {
 }
 
 impl Eye {
-    fn new(fov_range: f32, fov_angle: f32, cells: usize) -> Self {
+    pub(crate) fn new(config: &Config) -> Self {
+        let (fov_range, fov_angle, cells) = (config.eye_range, config.eye_fov, config.eye_cells);
+
         assert!(fov_range > 0.0);
         assert!(fov_angle > 0.0);
         assert!(cells > 0);
@@ -67,12 +64,6 @@ impl Eye {
     }
 }
 
-impl Default for Eye {
-    fn default() -> Self {
-        Self::new(FOV_RANGE, FOV_ANGLE, CELLS)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use std::f32::consts::FRAC_PI_2;
@@ -94,7 +85,7 @@ mod tests {
 
     impl TestCase {
         fn run(self) {
-            let eye = Eye::new(self.fov_range, self.fov_angle, TEST_EYE_CELLS);
+            let eye = Eye { fov_range: self.fov_range, fov_angle: self.fov_angle, cells: TEST_EYE_CELLS };
 
             let actual_vision = eye.process_vision(
                 Point2::new(self.x, self.y),

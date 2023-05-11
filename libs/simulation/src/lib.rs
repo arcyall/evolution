@@ -1,39 +1,29 @@
-pub use self::{animal::*, animal_individual::*, brain::*, eye::*, food::*, world::*};
+pub use self::{animal::*, animal_individual::*, brain::*, config::*, eye::*, food::*, world::*};
 use lib_neural_network as nn;
 use nalgebra::{distance, wrap, DVector, Point2, Rotation2, Vector2};
 use rand::{Rng, RngCore};
 use rayon::prelude::*;
-use std::f32::consts::FRAC_PI_2;
+use std::f32::consts::{FRAC_PI_2, PI};
 
 mod animal;
 mod animal_individual;
 mod brain;
+mod config;
 mod eye;
 mod food;
 mod world;
 
-const GENERATION_LEN: usize = 2500;
-
-const SPEED_MIN: f32 = 0.001;
-const SPEED_MAX: f32 = 0.004;
-const SPEED_ACCEL: f32 = 0.2;
-const ROT_ACCEL: f32 = FRAC_PI_2;
-
 pub struct Simulation {
     world: World,
-    ga: nn::GeneticAlgorithm,
     age: usize,
+    config: Config,
 }
 
 impl Simulation {
-    pub fn random(rng: &mut dyn RngCore) -> Self {
+    pub fn random(rng: &mut dyn RngCore, config: Config) -> Self {
         Self {
-            world: World::random(rng),
-            ga: nn::GeneticAlgorithm::new(
-                nn::Selection::Tournament,
-                nn::Crossover::Uniform,
-                nn::Mutation::Gaussian(0.01, 0.3),
-            ),
+            world: World::random(rng, &config),
+            config,
             age: 0,
         }
     }
@@ -42,18 +32,20 @@ impl Simulation {
         &self.world
     }
 
-    pub fn step(&mut self, rng: &mut dyn RngCore) -> Option<nn::Statistics> {
+    pub fn config(&self) -> &Config {
+        &self.config
+    }
 
+    pub fn step(&mut self, rng: &mut dyn RngCore) -> Option<nn::Statistics> {
         self.process_collisions(rng);
         self.world.animals.par_iter_mut().for_each(|animal| {
-            animal.process_brain(&self.world.food);
+            animal.process_brain(&self.world.food, &self.config);
             animal.process_movement();
         });
 
-
         self.age += 1;
 
-        if self.age > GENERATION_LEN {
+        if self.age > self.config.gen_len {
             Some(self.evolve(rng))
         } else {
             None
@@ -91,11 +83,17 @@ impl Simulation {
             .map(AnimalIndividual::from_animal)
             .collect();
 
-        let (evolved_pop, stats) = self.ga.evolve(rng, &current_pop);
+        let ga = nn::GeneticAlgorithm::new(
+            self.config.selection_method,
+            self.config.crossover_method,
+            self.config.mutation_method,
+        );
+
+        let (evolved_pop, stats) = ga.evolve(rng, &current_pop);
 
         self.world.animals = evolved_pop
             .into_iter()
-            .map(|indiv| indiv.into_animal(rng))
+            .map(|indiv| indiv.into_animal(rng, &self.config))
             .collect();
 
         for food in &mut self.world.food {

@@ -1,6 +1,7 @@
 use crate::*;
 use rand::{distributions::WeightedIndex, prelude::Distribution, seq::SliceRandom};
 
+#[derive(Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
 pub enum Selection {
     Rank,
     Roulette,

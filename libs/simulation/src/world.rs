@@ -6,10 +6,10 @@ pub struct World {
 }
 
 impl World {
-    pub fn random(rng: &mut dyn RngCore) -> Self {
+    pub fn random(rng: &mut dyn RngCore, config: &Config) -> Self {
         Self {
-            animals: (0..30).map(|_| Animal::random(rng)).collect(),
-            food: (0..60).map(|_| Food::random(rng)).collect(),
+            animals: (0..config.count_animal).map(|_| Animal::random(rng, config)).collect(),
+            food: (0..config.count_food).map(|_| Food::random(rng)).collect(),
         }
     }
 

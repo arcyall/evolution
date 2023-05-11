@@ -1,6 +1,6 @@
 import * as sim from 'lib-simulation-wasm';
 
-const simulation = new sim.Simulation();
+const simulation = new sim.Simulation(sim.Simulation.default_config());
 const viewport = document.getElementById('viewport');
 const scale = window.devicePixelRatio || 1;
 const width = viewport.width * scale;
