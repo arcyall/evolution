@@ -1,5 +1,8 @@
 use self::{camera::*, instance::*, texture::*};
+use lib_simulation as sim;
 use nalgebra::{Matrix4, Perspective3, Point3, Quaternion, Unit, Vector3};
+use rand::thread_rng;
+use sim::Simulation;
 use std::vec;
 use wgpu::util::DeviceExt;
 use winit::{
@@ -103,11 +106,13 @@ struct State {
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
     window: Window,
+
     camera: Camera,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
     camera_controller: CameraController,
     camera_bind_group: wgpu::BindGroup,
+
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
@@ -115,6 +120,8 @@ struct State {
     instance_buffer: wgpu::Buffer,
     num_indices: u32,
     depth_texture: Texture,
+
+    sim: Simulation,
     // diffuse_bind_group: wgpu::BindGroup,
 }
 
@@ -220,18 +227,33 @@ impl State {
             label: Some("Camera Bind Group"),
         });
 
-        let instances = (0..INSTANCES_PER_ROW)
-            .flat_map(|z| {
-                (0..INSTANCES_PER_ROW).map(move |x| {
-                    let position = Vector3::new(x as f32, 0.0, z as f32) - INSTANCE_DISPLACEMENT;
-                    let rotation = if position.x == 0.0 && position.z == 0.0 && position.y == 0.0 {
-                        Unit::new_normalize(Quaternion::from_parts(0.0, Vector3::z()))
-                    } else {
-                        Unit::new_normalize(Quaternion::from_parts(45.0, position.normalize()))
-                    };
+        let mut rng = thread_rng();
 
-                    Instance { position, rotation }
-                })
+        let sim = sim::Simulation::random(&mut rng, sim::Config::default());
+        let animals = sim.world().animals();
+
+        let instances = animals
+            .iter()
+            .map(|animal| {
+                let position = Vector3::new(
+                    animal.position().x * 100.0 - 50.0,
+                    0.0,
+                    animal.position().y * 100.0 - 50.0,
+                );
+                let rotation = if position.x == 0.0 && position.z == 0.0 && position.y == 0.0 {
+                    Unit::new_normalize(Quaternion::from_parts(
+                        10.0,
+                        Vector3::new(45.0, 45.0, 60.0),
+                    ))
+                } else {
+                    Unit::new_normalize(Quaternion::from_parts(45.0, position.normalize()))
+                };
+
+                Instance {
+                    position,
+                    rotation,
+                    color: Vector3::new(1.0, 1.0, 1.0),
+                }
             })
             .collect::<Vec<_>>();
 
@@ -296,26 +318,6 @@ impl State {
             multiview: None,
         });
 
-        //circle
-
-        // let angle = std::f32::consts::PI * 2.0 / 64.0;
-
-        // let verts = (0..64)
-        //     .map(|i| {
-        //         let theta = angle * i as f32;
-        //         Vertex {
-        //             pos: [0.5 * theta.cos(), -0.5 * theta.sin(), 0.0],
-        //             color: [(1.0 + theta.cos()) / 2.0, (1.0 + theta.sin()) / 2.0, 1.0],
-        //         }
-        //     })
-        //     .collect::<Vec<_>>();
-
-        // let tris = 64 - 2;
-
-        // let indices = (1u16..tris + 1)
-        //     .flat_map(|i| vec![i + 1, i, 0])
-        //     .collect::<Vec<_>>();
-
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
             contents: bytemuck::cast_slice(VERTICES),
@@ -329,10 +331,6 @@ impl State {
         });
 
         let num_indices = INDICES.len() as u32;
-
-        // let num_vertices = verts.len() as u32;
-
-        // let num_indices = indices.len() as u32;
 
         Self {
             window,
@@ -353,7 +351,7 @@ impl State {
             instances,
             instance_buffer,
             depth_texture,
-            // diffuse_bind_group,
+            sim, // diffuse_bind_group,
         }
     }
 
@@ -368,7 +366,12 @@ impl State {
             self.config.width = new_size.width;
             self.depth_texture =
                 texture::Texture::create_depth_texture(&self.device, &self.config, "Depth Texture");
-            self.surface.configure(&self.device, &self.config)
+            self.surface.configure(&self.device, &self.config);
+
+            let width = std::cmp::min(self.size.width, (self.size.height * 16) / 9);
+            let height = std::cmp::min(self.size.height, (self.size.width * 9) / 16);
+            self.camera_uniform.transform[0][0] = width as f32 / self.size.width as f32;
+            self.camera_uniform.transform[1][1] = height as f32 / self.size.height as f32;
         }
     }
 
@@ -443,7 +446,7 @@ impl State {
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 struct Vertex {
     pos: [f32; 3],
-    color: [f32; 3],
+    light: f32,
 }
 
 impl Vertex {
@@ -467,30 +470,82 @@ impl Vertex {
     }
 }
 
+// const VERTICES: &[Vertex] = &[
+//     Vertex {
+//         pos: [-0.0868241, 0.49240386, 0.0],
+//         color: [0.5, 0.0, 0.5],
+//     },
+//     Vertex {
+//         pos: [-0.49513406, 0.06958647, 0.0],
+//         color: [0.5, 0.0, 0.5],
+//     },
+//     Vertex {
+//         pos: [-0.21918549, -0.44939706, 0.0],
+//         color: [0.5, 0.0, 0.5],
+//     },
+//     Vertex {
+//         pos: [0.35966998, -0.3473291, 0.0],
+//         color: [0.5, 0.0, 0.5],
+//     },
+//     Vertex {
+//         pos: [0.44147372, 0.2347359, 0.0],
+//         color: [0.5, 0.0, 0.5],
+//     },
+// ];
+
+// const INDICES: &[u16] = &[0, 1, 4, 1, 2, 4, 2, 3, 4];
+
 const VERTICES: &[Vertex] = &[
     Vertex {
-        pos: [-0.0868241, 0.49240386, 0.0],
-        color: [0.5, 0.0, 0.5],
+        // A - top left
+        pos: [-0.5, 0.5, 0.],
+        light: 0.5,
     },
     Vertex {
-        pos: [-0.49513406, 0.06958647, 0.0],
-        color: [0.5, 0.0, 0.5],
+        // B - bottom left
+        pos: [-0.5, -0.5, 0.],
+        light: 1.0,
     },
     Vertex {
-        pos: [-0.21918549, -0.44939706, 0.0],
-        color: [0.5, 0.0, 0.5],
+        // C - bottom right
+        pos: [0.5, -0.5, 0.],
+        light: 1.0,
     },
     Vertex {
-        pos: [0.35966998, -0.3473291, 0.0],
-        color: [0.5, 0.0, 0.5],
+        // D - top right
+        pos: [0.5, 0.5, 0.],
+        light: 1.0,
     },
     Vertex {
-        pos: [0.44147372, 0.2347359, 0.0],
-        color: [0.5, 0.0, 0.5],
+        // E - top right - back
+        pos: [0.5, 0.5, -1.],
+        light: 1.0,
+    },
+    Vertex {
+        // F - bottom right - back
+        pos: [0.5, -0.5, -1.],
+        light: 0.5,
+    },
+    Vertex {
+        // G - top left - back
+        pos: [-0.5, 0.5, -1.],
+        light: 1.0,
+    },
+    Vertex {
+        // H - bottom left - back
+        pos: [-0.5, -0.5, -1.],
+        light: 1.0,
     },
 ];
+const INDICES: &[u16] = &[
+    0, 1, 2, 0, 2, 3, // front face
+    3, 2, 5, 3, 5, 4, // right face
+    4, 5, 7, 4, 7, 6, // back face
+    6, 7, 1, 6, 1, 0, // left face
+    6, 0, 3, 6, 3, 4, // top face
+    2, 1, 7, 5, 2, 7, // bottom face
+];
 
-const INDICES: &[u16] = &[0, 1, 4, 1, 2, 4, 2, 3, 4];
 const INSTANCES_PER_ROW: u32 = 10;
 const INSTANCE_DISPLACEMENT: Vector3<f32> = Vector3::new(
     INSTANCES_PER_ROW as f32 * 0.5,

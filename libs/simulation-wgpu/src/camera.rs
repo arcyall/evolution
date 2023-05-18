@@ -21,7 +21,8 @@ pub(crate) struct Camera {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub(crate) struct CameraUniform {
-    view_proj: [[f32; 4]; 4],
+    pub(crate) view_proj: [[f32; 4]; 4],
+    pub(crate) transform: [[f32; 4]; 4],
 }
 
 pub(crate) struct CameraController {
@@ -46,6 +47,7 @@ impl CameraUniform {
     pub(crate) fn new() -> Self {
         Self {
             view_proj: Matrix4::identity().into(),
+            transform: Matrix4::identity().into(),
         }
     }
 
