@@ -1,7 +1,7 @@
 use self::{camera::*, instance::*, texture::*};
 use lib_simulation as sim;
 use nalgebra::{Matrix4, Perspective3, Point3, Quaternion, Unit, Vector3};
-use rand::thread_rng;
+use rand::{rngs::ThreadRng, thread_rng};
 use sim::Simulation;
 use std::vec;
 use wgpu::util::DeviceExt;
@@ -116,12 +116,16 @@ struct State {
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
-    instances: Vec<Instance>,
+
+    animals: Vec<Instance>,
+    instance_data: Vec<InstanceRaw>,
     instance_buffer: wgpu::Buffer,
+
     num_indices: u32,
     depth_texture: Texture,
 
     sim: Simulation,
+    rng: ThreadRng,
     // diffuse_bind_group: wgpu::BindGroup,
 }
 
@@ -230,9 +234,10 @@ impl State {
         let mut rng = thread_rng();
 
         let sim = sim::Simulation::random(&mut rng, sim::Config::default());
-        let animals = sim.world().animals();
 
-        let instances = animals
+        let animals = sim
+            .world()
+            .animals()
             .iter()
             .map(|animal| {
                 let position = Vector3::new(
@@ -257,12 +262,12 @@ impl State {
             })
             .collect::<Vec<_>>();
 
-        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+        let instance_data = animals.iter().map(Instance::to_raw).collect::<Vec<_>>();
 
         let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Instance Buffer"),
             contents: bytemuck::cast_slice(&instance_data),
-            usage: wgpu::BufferUsages::VERTEX,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
         });
 
         let depth_texture =
@@ -348,10 +353,12 @@ impl State {
             vertex_buffer,
             index_buffer,
             num_indices,
-            instances,
+            animals,
             instance_buffer,
+            instance_data,
             depth_texture,
-            sim, // diffuse_bind_group,
+            sim,
+            rng,
         }
     }
 
@@ -390,6 +397,10 @@ impl State {
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+        self.refresh_instances();
+        self.queue
+            .write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&self.instance_data));
+
         let output = self.surface.get_current_texture()?;
         let view = output
             .texture
@@ -432,13 +443,45 @@ impl State {
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(0..self.num_indices, 0, 0..self.instances.len() as u32);
+            render_pass.draw_indexed(0..self.num_indices, 0, 0..self.animals.len() as u32);
         }
 
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
 
         Ok(())
+    }
+
+    fn refresh_instances(&mut self) {
+        self.sim.step(&mut self.rng);
+        self.instance_data = self
+            .sim
+            .world()
+            .animals()
+            .iter()
+            .map(|animal| {
+                let position = Vector3::new(
+                    animal.position().x * 100.0 - 50.0,
+                    0.0,
+                    animal.position().y * 100.0 - 50.0,
+                );
+                let rotation = if position.x == 0.0 && position.z == 0.0 && position.y == 0.0 {
+                    Unit::new_normalize(Quaternion::from_parts(
+                        10.0,
+                        Vector3::new(45.0, 45.0, 60.0),
+                    ))
+                } else {
+                    Unit::new_normalize(Quaternion::from_parts(45.0, position.normalize()))
+                };
+
+                Instance {
+                    position,
+                    rotation,
+                    color: Vector3::new(1.0, 1.0, 1.0),
+                }
+                .to_raw()
+            })
+            .collect()
     }
 }
 
@@ -546,9 +589,9 @@ const INDICES: &[u16] = &[
     2, 1, 7, 5, 2, 7, // bottom face
 ];
 
-const INSTANCES_PER_ROW: u32 = 10;
-const INSTANCE_DISPLACEMENT: Vector3<f32> = Vector3::new(
-    INSTANCES_PER_ROW as f32 * 0.5,
-    0.0,
-    INSTANCES_PER_ROW as f32 * 0.5,
-);
+// const INSTANCES_PER_ROW: u32 = 10;
+// const INSTANCE_DISPLACEMENT: Vector3<f32> = Vector3::new(
+//     INSTANCES_PER_ROW as f32 * 0.5,
+//     0.0,
+//     INSTANCES_PER_ROW as f32 * 0.5,
+// );
