@@ -13,5 +13,8 @@ module.exports = {
   ],
   experiments: {
     syncWebAssembly: true,
+  },
+  devServer:  {
+    static: [path.join(__dirname, 'res')],
   }
 };

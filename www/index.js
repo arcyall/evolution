@@ -1,4 +1,8 @@
 import * as sim from 'lib-simulation-wasm';
+import * as wgpu from 'lib-simulation-wgpu';
+
+
+wgpu.run();
 
 const simulation = new sim.Simulation(sim.Simulation.default_config());
 const viewport = document.getElementById('viewport');
