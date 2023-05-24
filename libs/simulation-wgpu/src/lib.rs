@@ -1,4 +1,4 @@
-use self::{camera::*, instance::*, texture::*};
+use self::{camera::*, instance::*, model::*, texture::*};
 use lib_simulation as sim;
 use nalgebra::{Matrix4, Perspective3, Point3, Quaternion, Unit, Vector3};
 use rand::{rngs::ThreadRng, thread_rng};
@@ -13,6 +13,8 @@ use winit::{
 
 mod camera;
 mod instance;
+mod model;
+mod resources;
 mod texture;
 
 #[cfg(target_arch = "wasm32")]
@@ -114,19 +116,16 @@ struct State {
     camera_bind_group: wgpu::BindGroup,
 
     render_pipeline: wgpu::RenderPipeline,
-    vertex_buffer: wgpu::Buffer,
-    index_buffer: wgpu::Buffer,
 
-    animals: Vec<Instance>,
+    instances: Vec<Instance>,
     instance_data: Vec<InstanceRaw>,
     instance_buffer: wgpu::Buffer,
 
-    num_indices: u32,
     depth_texture: Texture,
 
     sim: Simulation,
     rng: ThreadRng,
-    // diffuse_bind_group: wgpu::BindGroup,
+    obj_model: Model,
 }
 
 impl State {
@@ -231,6 +230,34 @@ impl State {
             label: Some("Camera Bind Group"),
         });
 
+        let texture_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                ],
+                label: Some("Texture Bind Group Layout"),
+            });
+
+        let obj_model =
+            resources::load_model("cube.obj", &device, &queue, &texture_bind_group_layout)
+                .await
+                .unwrap();
+
         let mut rng = thread_rng();
 
         let sim = sim::Simulation::random(&mut rng, sim::Config::default());
@@ -254,11 +281,7 @@ impl State {
                     Unit::new_normalize(Quaternion::from_parts(45.0, position.normalize()))
                 };
 
-                Instance {
-                    position,
-                    rotation,
-                    color: Vector3::new(1.0, 1.0, 1.0),
-                }
+                Instance { position, rotation }
             })
             .collect::<Vec<_>>();
 
@@ -278,7 +301,7 @@ impl State {
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[&camera_bind_group_layout],
+                bind_group_layouts: &[&texture_bind_group_layout, &camera_bind_group_layout],
                 push_constant_ranges: &[],
             });
 
@@ -288,14 +311,17 @@ impl State {
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: "vs_main",
-                buffers: &[Vertex::desc(), InstanceRaw::desc()],
+                buffers: &[model::ModelVertex::desc(), InstanceRaw::desc()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
                 entry_point: "fs_main",
                 targets: &[Some(wgpu::ColorTargetState {
                     format: config.format,
-                    blend: Some(wgpu::BlendState::REPLACE),
+                    blend: Some(wgpu::BlendState {
+                        color: wgpu::BlendComponent::REPLACE,
+                        alpha: wgpu::BlendComponent::REPLACE,
+                    }),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
             }),
@@ -323,20 +349,6 @@ impl State {
             multiview: None,
         });
 
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Vertex Buffer"),
-            contents: bytemuck::cast_slice(VERTICES),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
-
-        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Index Buffer"),
-            contents: bytemuck::cast_slice(INDICES),
-            usage: wgpu::BufferUsages::INDEX,
-        });
-
-        let num_indices = INDICES.len() as u32;
-
         Self {
             window,
             surface,
@@ -350,15 +362,13 @@ impl State {
             camera_bind_group,
             camera_controller,
             render_pipeline,
-            vertex_buffer,
-            index_buffer,
-            num_indices,
-            animals,
+            instances: animals,
             instance_buffer,
             instance_data,
             depth_texture,
             sim,
             rng,
+            obj_model,
         }
     }
 
@@ -374,11 +384,6 @@ impl State {
             self.depth_texture =
                 texture::Texture::create_depth_texture(&self.device, &self.config, "Depth Texture");
             self.surface.configure(&self.device, &self.config);
-
-            let width = std::cmp::min(self.size.width, (self.size.height * 16) / 9);
-            let height = std::cmp::min(self.size.height, (self.size.width * 9) / 16);
-            self.camera_uniform.transform[0][0] = width as f32 / self.size.width as f32;
-            self.camera_uniform.transform[1][1] = height as f32 / self.size.height as f32;
         }
     }
 
@@ -394,13 +399,16 @@ impl State {
             0,
             bytemuck::cast_slice(&[self.camera_uniform]),
         );
+
+        self.refresh_instances();
+        self.queue.write_buffer(
+            &self.instance_buffer,
+            0,
+            bytemuck::cast_slice(&self.instance_data),
+        );
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
-        self.refresh_instances();
-        self.queue
-            .write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&self.instance_data));
-
         let output = self.surface.get_current_texture()?;
         let view = output
             .texture
@@ -438,12 +446,17 @@ impl State {
             });
 
             render_pass.set_pipeline(&self.render_pipeline);
-            // render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
-            render_pass.set_bind_group(0, &self.camera_bind_group, &[]);
-            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
-            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(0..self.num_indices, 0, 0..self.animals.len() as u32);
+
+            let mesh = &self.obj_model.meshes[0];
+            let material = &self.obj_model.materials[mesh.material];
+
+            render_pass.draw_mesh_instanced(
+                mesh,
+                material,
+                0..self.instances.len() as u32,
+                &self.camera_bind_group,
+            )
         }
 
         self.queue.submit(std::iter::once(encoder.finish()));
@@ -474,124 +487,8 @@ impl State {
                     Unit::new_normalize(Quaternion::from_parts(45.0, position.normalize()))
                 };
 
-                Instance {
-                    position,
-                    rotation,
-                    color: Vector3::new(1.0, 1.0, 1.0),
-                }
-                .to_raw()
+                Instance { position, rotation }.to_raw()
             })
             .collect()
     }
 }
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-struct Vertex {
-    pos: [f32; 3],
-    light: f32,
-}
-
-impl Vertex {
-    fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
-        wgpu::VertexBufferLayout {
-            array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::VertexStepMode::Vertex,
-            attributes: &[
-                wgpu::VertexAttribute {
-                    offset: 0,
-                    shader_location: 0,
-                    format: wgpu::VertexFormat::Float32x3,
-                },
-                wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
-                    shader_location: 1,
-                    format: wgpu::VertexFormat::Float32x3,
-                },
-            ],
-        }
-    }
-}
-
-// const VERTICES: &[Vertex] = &[
-//     Vertex {
-//         pos: [-0.0868241, 0.49240386, 0.0],
-//         color: [0.5, 0.0, 0.5],
-//     },
-//     Vertex {
-//         pos: [-0.49513406, 0.06958647, 0.0],
-//         color: [0.5, 0.0, 0.5],
-//     },
-//     Vertex {
-//         pos: [-0.21918549, -0.44939706, 0.0],
-//         color: [0.5, 0.0, 0.5],
-//     },
-//     Vertex {
-//         pos: [0.35966998, -0.3473291, 0.0],
-//         color: [0.5, 0.0, 0.5],
-//     },
-//     Vertex {
-//         pos: [0.44147372, 0.2347359, 0.0],
-//         color: [0.5, 0.0, 0.5],
-//     },
-// ];
-
-// const INDICES: &[u16] = &[0, 1, 4, 1, 2, 4, 2, 3, 4];
-
-const VERTICES: &[Vertex] = &[
-    Vertex {
-        // A - top left
-        pos: [-0.5, 0.5, 0.],
-        light: 0.5,
-    },
-    Vertex {
-        // B - bottom left
-        pos: [-0.5, -0.5, 0.],
-        light: 1.0,
-    },
-    Vertex {
-        // C - bottom right
-        pos: [0.5, -0.5, 0.],
-        light: 1.0,
-    },
-    Vertex {
-        // D - top right
-        pos: [0.5, 0.5, 0.],
-        light: 1.0,
-    },
-    Vertex {
-        // E - top right - back
-        pos: [0.5, 0.5, -1.],
-        light: 1.0,
-    },
-    Vertex {
-        // F - bottom right - back
-        pos: [0.5, -0.5, -1.],
-        light: 0.5,
-    },
-    Vertex {
-        // G - top left - back
-        pos: [-0.5, 0.5, -1.],
-        light: 1.0,
-    },
-    Vertex {
-        // H - bottom left - back
-        pos: [-0.5, -0.5, -1.],
-        light: 1.0,
-    },
-];
-const INDICES: &[u16] = &[
-    0, 1, 2, 0, 2, 3, // front face
-    3, 2, 5, 3, 5, 4, // right face
-    4, 5, 7, 4, 7, 6, // back face
-    6, 7, 1, 6, 1, 0, // left face
-    6, 0, 3, 6, 3, 4, // top face
-    2, 1, 7, 5, 2, 7, // bottom face
-];
-
-// const INSTANCES_PER_ROW: u32 = 10;
-// const INSTANCE_DISPLACEMENT: Vector3<f32> = Vector3::new(
-//     INSTANCES_PER_ROW as f32 * 0.5,
-//     0.0,
-//     INSTANCES_PER_ROW as f32 * 0.5,
-// );
