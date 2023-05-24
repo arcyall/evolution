@@ -85,7 +85,11 @@ mod tests {
 
     impl TestCase {
         fn run(self) {
-            let eye = Eye { fov_range: self.fov_range, fov_angle: self.fov_angle, cells: TEST_EYE_CELLS };
+            let eye = Eye {
+                fov_range: self.fov_range,
+                fov_angle: self.fov_angle,
+                cells: TEST_EYE_CELLS,
+            };
 
             let actual_vision = eye.process_vision(
                 Point2::new(self.x, self.y),

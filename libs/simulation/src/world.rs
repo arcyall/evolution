@@ -8,7 +8,9 @@ pub struct World {
 impl World {
     pub fn random(rng: &mut dyn RngCore, config: &Config) -> Self {
         Self {
-            animals: (0..config.count_animal).map(|_| Animal::random(rng, config)).collect(),
+            animals: (0..config.count_animal)
+                .map(|_| Animal::random(rng, config))
+                .collect(),
             food: (0..config.count_food).map(|_| Food::random(rng)).collect(),
         }
     }

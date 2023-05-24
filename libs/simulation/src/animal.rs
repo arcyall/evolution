@@ -32,7 +32,11 @@ impl Animal {
         self.brain.as_chromosome()
     }
 
-    pub(crate) fn from_chromosome(chromosome: nn::Chromosome, rng: &mut dyn RngCore, config: &Config) -> Self {
+    pub(crate) fn from_chromosome(
+        chromosome: nn::Chromosome,
+        rng: &mut dyn RngCore,
+        config: &Config,
+    ) -> Self {
         let brain = Brain::from_chromosome(chromosome, config);
 
         Self::new(config, brain, rng)
