@@ -3,21 +3,18 @@ use crate::*;
 pub(crate) struct Instance {
     pub(crate) position: Vector3<f32>,
     pub(crate) rotation: Unit<Quaternion<f32>>,
-    pub(crate) color: Vector3<f32>,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub(crate) struct InstanceRaw {
     model: [[f32; 4]; 4],
-    color: [f32; 3],
 }
 
 impl Instance {
     pub(crate) fn to_raw(&self) -> InstanceRaw {
         InstanceRaw {
             model: (Matrix4::new_translation(&self.position) * Matrix4::from(self.rotation)).into(),
-            color: self.color.into(),
         }
     }
 }
