@@ -21,6 +21,7 @@ pub(crate) struct Camera {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub(crate) struct CameraUniform {
+    pub(crate) view_pos: [f32; 4],
     pub(crate) view_proj: [[f32; 4]; 4],
 }
 
@@ -45,11 +46,13 @@ impl Camera {
 impl CameraUniform {
     pub(crate) fn new() -> Self {
         Self {
+            view_pos: [0.0; 4],
             view_proj: Matrix4::identity().into(),
         }
     }
 
     pub(crate) fn update_view_proj(&mut self, camera: &Camera) {
+        self.view_pos = camera.eye.to_homogeneous().into();
         self.view_proj = camera.build_view_projection_matrix().into();
     }
 }
