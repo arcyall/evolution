@@ -1,7 +1,7 @@
 use self::{camera::*, instance::*, model::*, texture::*};
 use lib_simulation as sim;
 use nalgebra::{Matrix3, Matrix4, Perspective3, Point3, Quaternion, Unit, Vector3};
-use rand::{rngs::ThreadRng, thread_rng, Rng};
+use rand::{rngs::ThreadRng, thread_rng};
 use sim::Simulation;
 use std::vec;
 use wgpu::util::DeviceExt;
@@ -482,7 +482,7 @@ impl State {
                 polygon_mode: wgpu::PolygonMode::Fill,
                 conservative: false,
             },
-            depth_stencil: depth_format.map(|format| wgpu::DepthStencilState {
+            depth_stencil: depth_format.map(|_format| wgpu::DepthStencilState {
                 format: texture::Texture::DEPTH_FORMAT,
                 depth_write_enabled: true,
                 depth_compare: wgpu::CompareFunction::Less,
