@@ -16,7 +16,7 @@ image = { version = "0.24.6", features = ["png", "jpeg"] }
 log = "0.4.17"
 nalgebra = "0.32.2"
 pollster = "0.3.0"
-wgpu = "0.15.1"
+wgpu = "0.17.0"
 winit = "0.28.3"
 rand = "0.8.5"
 tobj = { version = "4.0.0", features = ["async"]}
@@ -27,7 +27,7 @@ console_log = "1.0.0"
 wasm-bindgen = "0.2.84"
 wasm-bindgen-futures = "0.4.34"
 web-sys = { version = "0.3.61", features = ["Document", "Window", "Element", "Location"] }
-wgpu = { version = "0.15.1", features = ["webgl"] }
+wgpu = { version = "0.17.0", features = ["webgl"] }
 reqwest = "0.11.18"
 
 [build-dependencies]

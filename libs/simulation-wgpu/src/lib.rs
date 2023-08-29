@@ -122,7 +122,7 @@ struct State {
     instance_data: Vec<InstanceRaw>,
     instance_buffer: wgpu::Buffer,
 
-    light_uniform: LightUniform,
+    light_uniform: Vec<LightUniform>,
     light_buffer: wgpu::Buffer,
     light_bind_group: wgpu::BindGroup,
 
@@ -184,7 +184,7 @@ impl State {
             .formats
             .iter()
             .copied()
-            .find(|f| f.describe().srgb)
+            .find(|f| f.is_srgb())
             .unwrap_or(surface_caps.formats[0]);
 
         let config = wgpu::SurfaceConfiguration {
@@ -268,7 +268,7 @@ impl State {
             });
 
         let obj_model =
-            resources::load_model("cube.obj", &device, &queue, &texture_bind_group_layout)
+            resources::load_model("pacman.obj", &device, &queue, &texture_bind_group_layout)
                 .await
                 .unwrap();
 
@@ -276,7 +276,7 @@ impl State {
 
         let sim = sim::Simulation::random(&mut rng, sim::Config::default());
 
-        let animals = sim
+        let animals: Vec<Instance> = sim
             .world()
             .animals()
             .iter()
@@ -297,9 +297,9 @@ impl State {
 
                 Instance { position, rotation }
             })
-            .collect::<Vec<_>>();
+            .collect();
 
-        let instance_data = animals.iter().map(Instance::to_raw).collect::<Vec<_>>();
+        let instance_data: Vec<InstanceRaw> = animals.iter().map(Instance::to_raw).collect();
 
         let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Instance Buffer"),
@@ -307,16 +307,36 @@ impl State {
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
         });
 
-        let light_uniform = LightUniform {
-            position: [2.0, 2.0, 2.0],
-            _padding: 0,
-            color: [1.0, 1.0, 1.0],
-            _padding2: 0,
-        };
+        // let light_uniform = LightUniform {
+        //     position: [2.0, 2.0, 2.0],
+        //     _padding: 0,
+        //     color: [1.0, 1.0, 1.0],
+        //     _padding2: 0,
+        // };
+
+        let light_uniform: Vec<LightUniform> = sim
+            .world()
+            .food()
+            .iter()
+            .map(|food| {
+                let position: [f32; 3] = [
+                    food.position().x * 100.0 - 50.0,
+                    0.0,
+                    food.position().y * 100.0 - 50.0,
+                ];
+
+                LightUniform {
+                    position,
+                    _padding: 0,
+                    color: [1.0, 1.0, 1.0],
+                    _padding2: 0,
+                }
+            })
+            .collect();
 
         let light_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Light Buffer"),
-            contents: bytemuck::cast_slice(&[light_uniform]),
+            contents: bytemuck::cast_slice(&light_uniform),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
@@ -507,10 +527,16 @@ impl State {
         );
 
         self.refresh_instances();
+
         self.queue.write_buffer(
             &self.instance_buffer,
             0,
             bytemuck::cast_slice(&self.instance_data),
+        );
+        self.queue.write_buffer(
+            &self.light_buffer,
+            0,
+            bytemuck::cast_slice(&self.light_uniform),
         );
     }
 
@@ -599,6 +625,27 @@ impl State {
 
                 Instance { position, rotation }.to_raw()
             })
-            .collect()
+            .collect();
+
+        self.light_uniform = self
+            .sim
+            .world()
+            .food()
+            .iter()
+            .map(|food| {
+                let position = [
+                    food.position().x * 100.0 - 50.0,
+                    0.0,
+                    food.position().y * 100.0 - 50.0,
+                ];
+
+                LightUniform {
+                    position,
+                    _padding: 0,
+                    color: [1.0, 1.0, 1.0],
+                    _padding2: 0,
+                }
+            })
+            .collect();
     }
 }
