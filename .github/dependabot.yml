@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/www" 
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "cargo"
+    directory: "/libs/neural-network"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "cargo"
+    directory: "/libs/simulation-wasm"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "cargo"
+    directory: "/libs/simulation"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "cargo"
+    directory: "/libs/simulation-wgpu"
+    schedule:
+      interval: "weekly"
