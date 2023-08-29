@@ -11,8 +11,7 @@
     "start": "webpack-dev-server"
   },
   "dependencies": {
-    "lib-simulation-wasm": "file:../libs/simulation-wasm/pkg",
-    "lib-simulation-wgpu": "file:../libs/simulation-wgpu/pkg"
+    "lib-simulation-wasm": "file:../libs/simulation-wasm/pkg"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^11.0.0",

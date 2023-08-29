@@ -1,7 +1,4 @@
 import * as sim from "lib-simulation-wasm";
-import * as wgpu from "lib-simulation-wgpu";
-
-wgpu.run();
 
 const simulation = new sim.Simulation(sim.Simulation.default_config());
 const viewport = document.getElementById("viewport");
@@ -43,6 +40,36 @@ CanvasRenderingContext2D.prototype.drawCircle = function (x, y, radius) {
 document.getElementById("train").onclick = function () {
   console.log(simulation.train());
 };
+
+const selection = sim.Simulation.selection_methods();
+var select = document.getElementById("selectionmethod");
+
+for (const i in selection) {
+  var opt = document.createElement("option");
+
+  opt.text = opt.value = selection[i];
+  select.add(opt, 0);
+}
+
+const mutation = sim.Simulation.mutation_methods();
+select = document.getElementById("mutationmethod");
+
+for (const i in mutation) {
+  var opt = document.createElement("option");
+
+  opt.text = opt.value = mutation[i];
+  select.add(opt, 0);
+}
+
+const crossover = sim.Simulation.crossover_methods();
+select = document.getElementById("crossovermethod");
+
+for (const i in crossover) {
+  var opt = document.createElement("option");
+
+  opt.text = opt.value = crossover[i];
+  select.add(opt, 0);
+}
 
 function redraw() {
   const world = simulation.world();
