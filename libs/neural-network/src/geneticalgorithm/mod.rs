@@ -2,12 +2,12 @@ pub use self::{
     chromosome::*, crossover::*, individual::*, mutation::*, selection::*, statistics::*,
 };
 
-mod chromosome;
-mod crossover;
+pub mod crossover;
+pub mod mutation;
+pub mod selection;
 mod individual;
-mod mutation;
-mod selection;
 mod statistics;
+mod chromosome;
 
 use crate::*;
 

@@ -1,4 +1,5 @@
 use crate::*;
+use strum::IntoEnumIterator;
 
 #[wasm_bindgen]
 pub struct Simulation {
@@ -36,6 +37,30 @@ impl Simulation {
 
     pub fn step(&mut self) {
         self.sim.step(&mut self.rng);
+    }
+
+    pub fn crossover_methods() -> JsValue {
+        let crossover: Vec<&'static str> = nn::geneticalgorithm::Crossover::iter()
+            .map(|x| x.into())
+            .collect();
+
+        serde_wasm_bindgen::to_value(&crossover).unwrap()
+    }
+
+    pub fn selection_methods() -> JsValue {
+        let selection: Vec<&'static str> = nn::geneticalgorithm::Selection::iter()
+            .map(|x| x.into())
+            .collect();
+
+        serde_wasm_bindgen::to_value(&selection).unwrap()
+    }
+
+    pub fn mutation_methods() -> JsValue {
+        let mutation: Vec<&'static str> = nn::geneticalgorithm::Mutation::iter()
+            .map(|x| x.into())
+            .collect();
+
+        serde_wasm_bindgen::to_value(&mutation).unwrap()
     }
 
     pub fn train(&mut self) -> String {

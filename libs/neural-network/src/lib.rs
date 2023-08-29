@@ -7,7 +7,7 @@ pub use crate::{geneticalgorithm::*, layer::LayerTopology};
 use nalgebra::{DMatrix, DVector};
 use rand::{Rng, RngCore};
 
-mod geneticalgorithm;
+pub mod geneticalgorithm;
 mod layer;
 
 pub struct Network {

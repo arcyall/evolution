@@ -1,6 +1,7 @@
 use crate::*;
+use strum_macros::{EnumIter, IntoStaticStr};
 
-#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(IntoStaticStr, EnumIter, Clone, Copy, Debug, serde::Deserialize, serde::Serialize)]
 pub enum Crossover {
     Uniform,
 }

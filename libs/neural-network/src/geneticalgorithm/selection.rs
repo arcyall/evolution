@@ -1,7 +1,8 @@
 use crate::*;
 use rand::{distributions::WeightedIndex, prelude::Distribution, seq::SliceRandom};
+use strum_macros::{EnumIter, IntoStaticStr};
 
-#[derive(Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(IntoStaticStr, EnumIter, Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
 pub enum Selection {
     Rank,
     Roulette,

@@ -1,6 +1,7 @@
 use crate::*;
+use strum_macros::{EnumIter, IntoStaticStr};
 
-#[derive(Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(IntoStaticStr, EnumIter, Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
 pub enum Mutation {
     /// Mutation with a gaussian distribution.
     /// (chance, coeff)
