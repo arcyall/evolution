@@ -71,7 +71,7 @@ document.getElementById("train").onclick = function () {
   console.log(simulation.train());
 };
 
-document.getElementById("submit").onclick= function () {
+document.getElementById("submit").onclick = function () {
   let conf = sim.Simulation.default_config();
 
   const neurons = parseInt(document.getElementById("neurons").value);
@@ -118,5 +118,4 @@ function redraw() {
   requestAnimationFrame(redraw);
 }
 
-console.log(simulation.config.selection_method)
 redraw();
