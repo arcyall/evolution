@@ -5,6 +5,9 @@ use strum::IntoEnumIterator;
 pub struct Simulation {
     rng: ThreadRng,
     sim: sim::Simulation,
+    crossovermethods: Vec<&'static str>,
+    mutationmethods: Vec<&'static str>,
+    selectionmethods: Vec<&'static str>,
 }
 
 #[allow(dead_code)]
@@ -18,8 +21,17 @@ impl Simulation {
         let config: sim::Config = serde_wasm_bindgen::from_value(config).unwrap();
         let mut rng = thread_rng();
         let sim = sim::Simulation::random(&mut rng, config);
+        let crossovermethods = nn::geneticalgorithm::Crossover::iter()
+            .map(|x| x.into())
+            .collect();
+        let selectionmethods = nn::geneticalgorithm::Selection::iter()
+            .map(|x| x.into())
+            .collect();
+        let mutationmethods = nn::geneticalgorithm::Mutation::iter()
+            .map(|x| x.into())
+            .collect();
 
-        Self { rng, sim }
+        Self { rng, sim, crossovermethods, selectionmethods, mutationmethods }
     }
 
     pub fn default_config() -> JsValue {
@@ -39,28 +51,16 @@ impl Simulation {
         self.sim.step(&mut self.rng);
     }
 
-    pub fn crossover_methods() -> JsValue {
-        let crossover: Vec<&'static str> = nn::geneticalgorithm::Crossover::iter()
-            .map(|x| x.into())
-            .collect();
-
-        serde_wasm_bindgen::to_value(&crossover).unwrap()
+    pub fn crossover_methods(&self) -> JsValue {
+        serde_wasm_bindgen::to_value(&self.crossovermethods).unwrap()
     }
 
-    pub fn selection_methods() -> JsValue {
-        let selection: Vec<&'static str> = nn::geneticalgorithm::Selection::iter()
-            .map(|x| x.into())
-            .collect();
-
-        serde_wasm_bindgen::to_value(&selection).unwrap()
+    pub fn selection_methods(&self) -> JsValue {
+        serde_wasm_bindgen::to_value(&self.selectionmethods).unwrap()
     }
 
-    pub fn mutation_methods() -> JsValue {
-        let mutation: Vec<&'static str> = nn::geneticalgorithm::Mutation::iter()
-            .map(|x| x.into())
-            .collect();
-
-        serde_wasm_bindgen::to_value(&mutation).unwrap()
+    pub fn mutation_methods(&self) -> JsValue {
+        serde_wasm_bindgen::to_value(&self.mutationmethods).unwrap()
     }
 
     pub fn train(&mut self) -> String {
