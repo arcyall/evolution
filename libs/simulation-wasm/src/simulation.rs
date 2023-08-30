@@ -31,7 +31,13 @@ impl Simulation {
             .map(|x| x.into())
             .collect();
 
-        Self { rng, sim, crossovermethods, selectionmethods, mutationmethods }
+        Self {
+            rng,
+            sim,
+            crossovermethods,
+            selectionmethods,
+            mutationmethods,
+        }
     }
 
     pub fn default_config() -> JsValue {
