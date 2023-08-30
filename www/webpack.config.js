@@ -9,12 +9,9 @@ module.exports = {
   },
   mode: "development",
   plugins: [
-    new CopyWebpackPlugin({patterns: ['index.html']})
+    new CopyWebpackPlugin({patterns: ['index.html', 'index.css']})
   ],
   experiments: {
     syncWebAssembly: true,
   },
-  devServer:  {
-    static: [path.join(__dirname, 'res')],
-  }
 };

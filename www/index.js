@@ -1,6 +1,6 @@
 import * as sim from "lib-simulation-wasm";
 
-const simulation = new sim.Simulation(sim.Simulation.default_config());
+var simulation = new sim.Simulation(sim.Simulation.default_config());
 const viewport = document.getElementById("viewport");
 const scale = window.devicePixelRatio || 1;
 const width = viewport.width * scale;
@@ -11,6 +11,36 @@ viewport.style.height = height + "px";
 
 const context = viewport.getContext("2d");
 context.scale(scale, scale);
+
+const selection = simulation.selection_methods();
+var select = document.getElementById("selectionMethod");
+
+for (const i in selection) {
+  var opt = document.createElement("option");
+
+  opt.text = opt.value = selection[i];
+  select.add(opt, 0);
+}
+
+const mutation = simulation.mutation_methods();
+select = document.getElementById("mutationMethod");
+
+for (const i in mutation) {
+  var opt = document.createElement("option");
+
+  opt.text = opt.value = mutation[i];
+  select.add(opt, 0);
+}
+
+const crossover = simulation.crossover_methods();
+select = document.getElementById("crossoverMethod");
+
+for (const i in crossover) {
+  var opt = document.createElement("option");
+
+  opt.text = opt.value = crossover[i];
+  select.add(opt, 0);
+}
 
 CanvasRenderingContext2D.prototype.drawTriangle = function (x, y, size, rot) {
   this.beginPath();
@@ -41,35 +71,29 @@ document.getElementById("train").onclick = function () {
   console.log(simulation.train());
 };
 
-const selection = sim.Simulation.selection_methods();
-var select = document.getElementById("selectionmethod");
+document.getElementById("submit").onclick= function () {
+  let conf = sim.Simulation.default_config();
 
-for (const i in selection) {
-  var opt = document.createElement("option");
+  const neurons = parseInt(document.getElementById("neurons").value);
+  const minSpeed = parseFloat(document.getElementById("minSpeed").value);
+  const maxSpeed = parseFloat(document.getElementById("maxSpeed").value);
+  const accel = parseFloat(document.getElementById("accel").value);
+  const genLen = parseInt(document.getElementById("genLen").value);
+  const actCount = parseInt(document.getElementById("actCount").value);
+  const pntCount = parseInt(document.getElementById("pntCount").value);
+  const selectionMethod = document.getElementById("selectionMethod").value;
 
-  opt.text = opt.value = selection[i];
-  select.add(opt, 0);
-}
+  conf.brain_neurons = neurons;
+  conf.speed_min = minSpeed;
+  conf.speed_max = maxSpeed;
+  conf.speed_accel = accel;
+  conf.gen_len = genLen;
+  conf.count_animal = actCount;
+  conf.count_food = pntCount;
+  conf.selection_method = selectionMethod;
 
-const mutation = sim.Simulation.mutation_methods();
-select = document.getElementById("mutationmethod");
-
-for (const i in mutation) {
-  var opt = document.createElement("option");
-
-  opt.text = opt.value = mutation[i];
-  select.add(opt, 0);
-}
-
-const crossover = sim.Simulation.crossover_methods();
-select = document.getElementById("crossovermethod");
-
-for (const i in crossover) {
-  var opt = document.createElement("option");
-
-  opt.text = opt.value = crossover[i];
-  select.add(opt, 0);
-}
+  simulation = new sim.Simulation(conf);
+};
 
 function redraw() {
   const world = simulation.world();
@@ -94,4 +118,5 @@ function redraw() {
   requestAnimationFrame(redraw);
 }
 
+console.log(simulation.config.selection_method)
 redraw();

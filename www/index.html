@@ -3,36 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <title>evolution</title>
+    <link rel="stylesheet" type="text/css" href="./index.css">
   </head>
-  <style>
-      body {
-        background: #2c3333;
-      }
-      #input {
-        background-color: aliceblue;
-      }
-      input[type=text], select {
-    width: 100%;
-    padding: 12px 20px;
-    margin: 8px 0;
-    display: flex;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-  }
-  #viewport {
-    width: 100%;
-    padding: 12px 20px;
-    margin: 8px 0;
-    display: flex;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-  }
-  #container {
-    display: flex;
-  }
-  </style>
   <body>
     <noscript
       >This page contains webassembly and javascript content, please enable
@@ -41,26 +13,26 @@
     <div id="container">
       <div id="input">
         <form>
-          <label for="Neurons">Neurons:</label>
-          <input type="text" id="Neurons" name="Neurons" />
-          <label for="MinSpeed">Min speed:</label>
-          <input type="text" id="MinSpeed" name="MinSpeed" />
-          <label for="MaxSpeed">Max speed:</label>
-          <input type="text" id="MaxSpeed" name="MaxSpeed"/>
-          <label for="Accel">Acceleration:</label>
-          <input type="text" id="Accel" name="Accel" />
-          <label for="GenLen">Generation length:</label>
-          <input type="text" id="GenLen" name="GenLen" />
-          <label for="ActCount">Actor count:</label>
-          <input type="text" id="ActCount" name="ActCount" />
-          <label for="PntCount">Point count:</label>
-          <input type="text" id="PntCount" name="PntCount" />
-          <select id="selectionmethod" name="selectionmethod"></select>
-          <select id="mutationmethod" name="mutationmethod"></select>
-          <select id="crossovermethod" name="crossovermethod""></select>
-          <input type="submit" value="Set options">
+          <label for="neurons">Neurons:</label>
+          <input type="text" id="neurons" name="neurons" value="9"/>
+          <label for="minSpeed">Min speed:</label>
+          <input type="text" id="minSpeed" name="minSpeed" value="0.002"/>
+          <label for="maxSpeed">Max speed:</label>
+          <input type="text" id="maxSpeed" name="maxSpeed" value="0.6"/>
+          <label for="accel">Acceleration:</label>
+          <input type="text" id="accel" name="accel" value="0.2"/>
+          <label for="genLen">Generation length:</label>
+          <input type="text" id="genLen" name="genLen" value="3000"/>
+          <label for="actCount">Actor count:</label>
+          <input type="text" id="actCount" name="actCount" value="30"/>
+          <label for="pntCount">Point count:</label>
+          <input type="text" id="pntCount" name="pntCount" value="100"/>
+          <select id="selectionMethod" name="selectionMethod"></select>
+          <select id="mutationMethod" name="mutationMethod"></select>
+          <select id="crossoverMethod" name="crossoverMethod""></select>
         </form>
-        <button id="train">train</button>
+        <button id="submit">Set options</button>
+        <button id="train">Train</button>
       </div>
       <div>
         <canvas id="viewport" width="1200" height="1200"></canvas>
