@@ -27,12 +27,16 @@
           <input type="text" id="actCount" name="actCount" value="30"/>
           <label for="pntCount">Point count:</label>
           <input type="text" id="pntCount" name="pntCount" value="100"/>
+          <label for="selectionMethod">Selection method:</label>
           <select id="selectionMethod" name="selectionMethod"></select>
+          <label for="mutationMethod">Mutation method:</label>
           <select id="mutationMethod" name="mutationMethod"></select>
+          <label for="crossoverMethod">Crossover method:</label>
           <select id="crossoverMethod" name="crossoverMethod""></select>
         </form>
         <button id="submit">Set options</button>
         <button id="train">Train</button>
+        <p id="fitness">Min. Fitness = ?</br>Max. Fitness = ?</br>Avg. Fitness = ?</p>
       </div>
       <div>
         <canvas id="viewport" width="1200" height="1200"></canvas>

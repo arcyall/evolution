@@ -73,7 +73,7 @@ impl Simulation {
         let stats = self.sim.train(&mut self.rng);
 
         format!(
-            "min={:.2}, max={:.2}, avg={:.2}",
+            "Min. Fitness = {:.2}</br>Max. Fitness = {:.2}</br>Avg. Fitness = {:.2}",
             stats.min_fitness(),
             stats.max_fitness(),
             stats.avg_fitness()

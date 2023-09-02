@@ -69,7 +69,10 @@ CanvasRenderingContext2D.prototype.drawCircle = function (x, y, radius) {
 };
 
 document.getElementById('train').onclick = function () {
-	console.log(simulation.train());
+	let stats = simulation.train();
+	const fitness = document.getElementById("fitness");
+
+	fitness.innerHTML = stats;
 };
 
 document.getElementById('submit').onclick = function () {
