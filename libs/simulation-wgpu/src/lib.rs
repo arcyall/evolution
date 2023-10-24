@@ -6,8 +6,10 @@ use sim::Simulation;
 use std::vec;
 use wgpu::util::DeviceExt;
 use winit::{
+    dpi::PhysicalSize,
     event::*,
-    event_loop::{ControlFlow, EventLoop},
+    event_loop::EventLoop,
+    keyboard::{KeyCode, PhysicalKey},
     window::{Window, WindowBuilder},
 };
 
@@ -35,7 +37,7 @@ pub async fn run() {
         }
     }
 
-    let event_loop = EventLoop::new();
+    let event_loop = EventLoop::new().unwrap();
     let window = WindowBuilder::new()
         .with_title("evolution")
         .build(&event_loop)
@@ -45,7 +47,7 @@ pub async fn run() {
     {
         use winit::{dpi::PhysicalSize, platform::web::WindowExtWebSys};
 
-        window.set_inner_size(PhysicalSize::new(450, 450));
+        window.request_inner_size(PhysicalSize::new(450, 450));
 
         web_sys::window()
             .and_then(|win| win.document())
@@ -60,45 +62,54 @@ pub async fn run() {
 
     let mut state = State::new(window).await;
 
-    event_loop.run(move |event, _, control_flow| match event {
-        Event::WindowEvent {
-            ref event,
-            window_id,
-        } if window_id == state.window().id() => {
-            if !state.input(event) {
-                match event {
-                    WindowEvent::CloseRequested
-                    | WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                state: ElementState::Pressed,
-                                virtual_keycode: Some(VirtualKeyCode::Escape),
-                                ..
-                            },
-                        ..
-                    } => *control_flow = ControlFlow::Exit,
-                    WindowEvent::Resized(new_size) => state.resize(*new_size),
-                    WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                        state.resize(**new_inner_size)
+    event_loop
+        .run(move |event, control_flow| match event {
+            Event::WindowEvent {
+                ref event,
+                window_id,
+            } if window_id == state.window().id() => {
+                if !state.input(event) {
+                    match event {
+                        WindowEvent::CloseRequested
+                        | WindowEvent::KeyboardInput {
+                            event:
+                                KeyEvent {
+                                    state: ElementState::Pressed,
+                                    physical_key: PhysicalKey::Code(KeyCode::Escape),
+                                    ..
+                                },
+                            ..
+                        } => control_flow.exit(),
+                        WindowEvent::Resized(new_size) => state.resize(*new_size),
+                        WindowEvent::ScaleFactorChanged {
+                            inner_size_writer,
+                            scale_factor,
+                        } => {
+                            let curr_size = state.window.inner_size();
+                            let mut inner_size_writer = inner_size_writer.clone();
+                            inner_size_writer
+                                .request_inner_size(PhysicalSize {
+                                    width: (curr_size.width as f64 * scale_factor) as u32,
+                                    height: (curr_size.height as f64 * scale_factor) as u32,
+                                })
+                                .unwrap()
+                        }
+                        WindowEvent::RedrawRequested => {
+                            state.update();
+                            match state.render() {
+                                Ok(_) => {}
+                                Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
+                                Err(wgpu::SurfaceError::OutOfMemory) => control_flow.exit(),
+                                Err(e) => eprintln!("{:?}", e),
+                            }
+                        }
+                        _ => {}
                     }
-                    _ => {}
                 }
             }
-        }
-        Event::RedrawRequested(window_id) if window_id == state.window().id() => {
-            state.update();
-            match state.render() {
-                Ok(_) => {}
-                Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
-                Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
-                Err(e) => eprintln!("{:?}", e),
-            }
-        }
-        Event::MainEventsCleared => {
-            state.window().request_redraw();
-        }
-        _ => {}
-    });
+            _ => state.window.request_redraw(),
+        })
+        .unwrap()
 }
 
 struct State {
