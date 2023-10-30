@@ -160,6 +160,8 @@ impl State {
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::all(),
             dx12_shader_compiler: Default::default(),
+            flags: wgpu::InstanceFlags::default(),
+            gles_minor_version: wgpu::Gles3MinorVersion::Automatic,
         });
 
         let surface = unsafe { instance.create_surface(&window) }.unwrap();
@@ -188,6 +190,12 @@ impl State {
             )
             .await
             .unwrap();
+
+        //let query_set = device.create_query_set(&wgpu::QuerySetDescriptor {
+        //label: Some("Query Set"),
+        //ty: wgpu::QueryType::Timestamp,
+        //count: 0,
+        //});
 
         let surface_caps = surface.get_capabilities(&adapter);
 
@@ -575,17 +583,19 @@ impl State {
                             b: 0.3,
                             a: 1.0,
                         }),
-                        store: true,
+                        store: wgpu::StoreOp::Store,
                     },
                 })],
                 depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                     view: &self.depth_texture.view,
                     depth_ops: Some(wgpu::Operations {
                         load: wgpu::LoadOp::Clear(1.0),
-                        store: true,
+                        store: wgpu::StoreOp::Store,
                     }),
                     stencil_ops: None,
                 }),
+                timestamp_writes: None,
+                occlusion_query_set: None,
             });
 
             render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
