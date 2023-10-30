@@ -191,10 +191,10 @@ impl State {
             .await
             .unwrap();
 
-//        let query_set = device.create_query_set(&wgpu::QuerySetDescriptor {
-            //label: Some("Query Set"),
-            //ty: wgpu::QueryType::Timestamp,
-            //count: 0,
+        //let query_set = device.create_query_set(&wgpu::QuerySetDescriptor {
+        //label: Some("Query Set"),
+        //ty: wgpu::QueryType::Timestamp,
+        //count: 0,
         //});
 
         let surface_caps = surface.get_capabilities(&adapter);
