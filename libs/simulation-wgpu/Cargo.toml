@@ -27,7 +27,7 @@ console_log = "1.0.0"
 wasm-bindgen = "0.2.84"
 wasm-bindgen-futures = "0.4.34"
 web-sys = { version = "0.3.61", features = ["Document", "Window", "Element", "Location"] }
-wgpu = { version = "0.17.0", features = ["webgl"] }
+wgpu = { version = "0.18.0", features = ["webgl"] }
 reqwest = "0.11.18"
 
 [build-dependencies]
