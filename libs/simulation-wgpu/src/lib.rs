@@ -4,7 +4,7 @@ use nalgebra::{Matrix3, Matrix4, Perspective3, Point3, Quaternion, Unit, Vector3
 use rand::{rngs::ThreadRng, thread_rng};
 use sim::Simulation;
 use std::vec;
-use wgpu::{util::DeviceExt, RenderPassTimestampWrites};
+use wgpu::util::DeviceExt;
 use winit::{
     dpi::PhysicalSize,
     event::*,
