@@ -164,7 +164,10 @@ impl State<'_> {
             gles_minor_version: wgpu::Gles3MinorVersion::Automatic,
         });
 
-        let surface = unsafe { instance.create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window).unwrap()) }.unwrap();
+        let surface = unsafe {
+            instance.create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window).unwrap())
+        }
+        .unwrap();
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
