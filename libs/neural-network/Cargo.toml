@@ -11,7 +11,7 @@ rand = "0.8.5"
 rand_chacha = "0.3.1"
 serde = { version = "1.0.163", features = ["derive"] }
 strum = "0.25.0"
-strum_macros = "0.25.2"
+strum_macros = "0.26.1"
 
 [dev-dependencies]
 approx = "0.5.1"
