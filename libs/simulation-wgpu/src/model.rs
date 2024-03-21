@@ -6,6 +6,7 @@ pub trait Vertex {
     fn desc<'a>() -> wgpu::VertexBufferLayout<'a>;
 }
 
+#[allow(dead_code)]
 pub trait DrawModel<'a> {
     fn draw_mesh(
         &mut self,
@@ -40,6 +41,7 @@ pub trait DrawModel<'a> {
     );
 }
 
+#[allow(dead_code)]
 pub trait DrawLight<'a> {
     fn draw_light_mesh(
         &mut self,
